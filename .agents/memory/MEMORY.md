@@ -1,0 +1,1 @@
+- [Session Auth Quirks](session-auth-quirks.md) — connect-pg-simple table.sql breaks in esbuild; session cookies need Vite proxy + credentials:include; retry:false on useGetMe for public pages.

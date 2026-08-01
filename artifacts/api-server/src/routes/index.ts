@@ -6,6 +6,7 @@ import categoriesRouter from "./categories";
 import budgetsRouter from "./budgets";
 import locationsRouter from "./locations";
 import dashboardRouter from "./dashboard";
+import aiRouter from "./ai";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use(categoriesRouter);
 router.use(budgetsRouter);
 router.use(locationsRouter);
 router.use(dashboardRouter);
+router.use(aiRouter);
 
 export default router;
