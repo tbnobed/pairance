@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CouplesBudget"
+description = "A couples budgeting web app that tracks shared spending. Features GPS/geolocation prompts when the user arrives at new locations, per-category budget limits, transaction history, and a shared spending dashboard visible to both partners. Requires login."
+version = "1.0.0"
+id = "artifacts/budget-tracker"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18541
+
+[services.development]
+run = "pnpm --filter @workspace/budget-tracker run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/budget-tracker", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/budget-tracker/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18541"
+BASE_PATH = "/"

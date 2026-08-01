@@ -3,20 +3,31 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CouplesBudget API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: transactions
+    description: Spending transactions
+  - name: categories
+    description: Spending categories
+  - name: budgets
+    description: Budget limits per category
+  - name: locations
+    description: Geolocation check-in prompts
+  - name: dashboard
+    description: Dashboard summary data
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +35,687 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out (clear session)
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  /auth/invite:
+    post:
+      operationId: inviteSpouse
+      tags: [auth]
+      summary: Invite spouse by email to join the shared household
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteInput"
+      responses:
+        "200":
+          description: Invitation sent / linked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List all transactions for the household
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: ["number", "null"]
+        - name: userId
+          in: query
+          schema:
+            type: ["number", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["number", "null"]
+        - name: offset
+          in: query
+          schema:
+            type: ["number", "null"]
+      responses:
+        "200":
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Log a new spending transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /transactions/{id}:
+    get:
+      operationId: getTransaction
+      tags: [transactions]
+      summary: Get a single transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateTransaction
+      tags: [transactions]
+      summary: Update a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+    delete:
+      operationId: deleteTransaction
+      tags: [transactions]
+      summary: Delete a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Deleted
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List spending categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    patch:
+      operationId: updateCategory
+      tags: [categories]
+      summary: Update a category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete a category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Deleted
+
+  /budgets:
+    get:
+      operationId: listBudgets
+      tags: [budgets]
+      summary: List all budget limits
+      responses:
+        "200":
+          description: Budgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Budget"
+    post:
+      operationId: createBudget
+      tags: [budgets]
+      summary: Set a monthly budget for a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+
+  /budgets/{id}:
+    patch:
+      operationId: updateBudget
+      tags: [budgets]
+      summary: Update a budget limit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+    delete:
+      operationId: deleteBudget
+      tags: [budgets]
+      summary: Delete a budget
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Deleted
+
+  /locations/check-in:
+    post:
+      operationId: locationCheckIn
+      tags: [locations]
+      summary: Check in at a GPS location and get a spending prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationCheckInInput"
+      responses:
+        "200":
+          description: Check-in result with optional spending prompt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationCheckInResult"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get monthly spending summary totals by category vs. budget
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/recent:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent transactions from both partners
+      responses:
+        "200":
+          description: Recent transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /dashboard/spending-by-day:
+    get:
+      operationId: getSpendingByDay
+      tags: [dashboard]
+      summary: Get daily spending totals for the current month (for chart)
+      responses:
+        "200":
+          description: Daily spending
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailySpending"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    User:
+      type: object
+      required: [id, name, email, householdId, createdAt]
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        email:
+          type: string
+        householdId:
+          type: ["number", "null"]
+        spouseName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 8
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    InviteInput:
+      type: object
+      required: [spouseEmail]
+      properties:
+        spouseEmail:
+          type: string
+
+    Transaction:
+      type: object
+      required: [id, amount, description, categoryId, userId, date, createdAt]
+      properties:
+        id:
+          type: number
+        amount:
+          type: number
+        description:
+          type: string
+        categoryId:
+          type: number
+        categoryName:
+          type: ["string", "null"]
+        categoryColor:
+          type: ["string", "null"]
+        userId:
+          type: number
+        userName:
+          type: ["string", "null"]
+        locationName:
+          type: ["string", "null"]
+        locationLat:
+          type: ["number", "null"]
+        locationLng:
+          type: ["number", "null"]
+        date:
+          type: string
+        createdAt:
+          type: string
+
+    TransactionInput:
+      type: object
+      required: [amount, description, categoryId, date]
+      properties:
+        amount:
+          type: number
+        description:
+          type: string
+          minLength: 1
+        categoryId:
+          type: number
+        date:
+          type: string
+        locationName:
+          type: ["string", "null"]
+        locationLat:
+          type: ["number", "null"]
+        locationLng:
+          type: ["number", "null"]
+
+    TransactionUpdate:
+      type: object
+      properties:
+        amount:
+          type: number
+        description:
+          type: string
+        categoryId:
+          type: number
+        date:
+          type: string
+        locationName:
+          type: ["string", "null"]
+        locationLat:
+          type: ["number", "null"]
+        locationLng:
+          type: ["number", "null"]
+
+    Category:
+      type: object
+      required: [id, name, color, icon, householdId, createdAt]
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        color:
+          type: string
+        icon:
+          type: string
+        householdId:
+          type: number
+        createdAt:
+          type: string
+
+    CategoryInput:
+      type: object
+      required: [name, color, icon]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        color:
+          type: string
+        icon:
+          type: string
+
+    CategoryUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+        icon:
+          type: string
+
+    Budget:
+      type: object
+      required: [id, categoryId, monthlyLimit, month, householdId, createdAt]
+      properties:
+        id:
+          type: number
+        categoryId:
+          type: number
+        categoryName:
+          type: ["string", "null"]
+        categoryColor:
+          type: ["string", "null"]
+        monthlyLimit:
+          type: number
+        spent:
+          type: ["number", "null"]
+        month:
+          type: string
+        householdId:
+          type: number
+        createdAt:
+          type: string
+
+    BudgetInput:
+      type: object
+      required: [categoryId, monthlyLimit, month]
+      properties:
+        categoryId:
+          type: number
+        monthlyLimit:
+          type: number
+        month:
+          type: string
+
+    BudgetUpdate:
+      type: object
+      properties:
+        monthlyLimit:
+          type: number
+
+    LocationCheckInInput:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+        locationName:
+          type: ["string", "null"]
+
+    LocationCheckInResult:
+      type: object
+      required: [shouldPrompt]
+      properties:
+        shouldPrompt:
+          type: boolean
+        locationName:
+          type: ["string", "null"]
+        lastVisitedAt:
+          type: ["string", "null"]
+        suggestedCategory:
+          type: ["number", "null"]
+        suggestedCategoryName:
+          type: ["string", "null"]
+
+    DashboardSummary:
+      type: object
+      required: [totalSpentThisMonth, totalBudgetThisMonth, categoryBreakdown, partnerBreakdown]
+      properties:
+        totalSpentThisMonth:
+          type: number
+        totalBudgetThisMonth:
+          type: number
+        categoryBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategorySpending"
+        partnerBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartnerSpending"
+
+    CategorySpending:
+      type: object
+      required: [categoryId, categoryName, categoryColor, spent, budget, percentage]
+      properties:
+        categoryId:
+          type: number
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        spent:
+          type: number
+        budget:
+          type: ["number", "null"]
+        percentage:
+          type: number
+
+    PartnerSpending:
+      type: object
+      required: [userId, userName, spent]
+      properties:
+        userId:
+          type: number
+        userName:
+          type: string
+        spent:
+          type: number
+
+    DailySpending:
+      type: object
+      required: [date, total]
+      properties:
+        date:
+          type: string
+        total:
+          type: number

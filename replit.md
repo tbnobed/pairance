@@ -1,36 +1,55 @@
-# [Project name]
+# CouplesBudget
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A shared budgeting app for couples to track spending together. Features GPS-triggered spending prompts, shared category management, monthly budget limits, and a joint dashboard for both partners.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/budget-tracker run dev` — run the frontend (dev, port 18541)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `SESSION_SECRET` — random secret for session signing
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Frontend: React + Vite, Tailwind CSS v4, shadcn/ui, Wouter, Recharts
 - API: Express 5
+- Auth: Local email/password with bcrypt + express-session (PostgreSQL session store)
 - DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
+- Validation: Zod (v3), drizzle-zod
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — OpenAPI contract (source of truth)
+- `lib/db/src/schema/` — Drizzle table definitions (users, households, categories, transactions, budgets, location_visits)
+- `artifacts/api-server/src/routes/` — Express route handlers (auth, transactions, categories, budgets, locations, dashboard)
+- `artifacts/budget-tracker/src/` — React frontend (pages: home, login, register, dashboard, transactions, categories, budgets, settings)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Local auth only**: bcrypt password hashing + express-session with PostgreSQL session store. No third-party auth services.
+- **Household model**: Each user belongs to a household. Partners share a household_id which scopes all their data together.
+- **GPS prompting**: Browser Geolocation API triggers a check-in endpoint that uses Haversine distance to detect if the user is at a new location and suggests logging spending. Suppresses re-prompts within 4 hours at the same spot.
+- **Cookie-based sessions**: Credentials travel as HttpOnly session cookies — no token handling in the frontend.
+- **Docker deployment**: `Dockerfile` + `docker-compose.yml` at project root for self-hosting.
 
-## Product
+## Docker Deployment
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+```bash
+# Copy and configure .env
+cp .env.example .env  # set POSTGRES_PASSWORD and SESSION_SECRET
+
+# Build and start
+docker compose up -d
+```
+
+App runs on port 8080. Set `SESSION_SECRET` to a long random string in production.
 
 ## User preferences
 
@@ -38,7 +57,9 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- After any `lib/db/src/schema/` change, run `pnpm run typecheck:libs` before typechecking server routes — stale declarations cause false import errors.
+- OpenAPI spec must use `type: number` (not `type: integer`) — Orval 8.23+ generates `zod.int()` for `integer` types which is Zod v4 only; the workspace uses Zod v3.
+- `useGetMe` on unauthenticated pages must use `retry: false` — default 3 retries + backoff causes ~30s blank screen while React Query retries the 401.
 
 ## Pointers
 
