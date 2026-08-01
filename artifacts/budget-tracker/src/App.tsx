@@ -18,7 +18,7 @@ function Router() {
     <Switch>
       <Route path="/"><Login /></Route>
       <Route path="/login" component={Login} />
-      
+
       {/* Authenticated Routes wrapped in Layout */}
       <Route path="/dashboard">
         <Layout><Dashboard /></Layout>
