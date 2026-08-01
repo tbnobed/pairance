@@ -7,12 +7,16 @@ import { openai } from "@workspace/integrations-openai-ai-server";
 const router = Router();
 
 router.post("/api/ai/suggest-budgets", requireAuth, async (req, res) => {
-  const { monthlyIncome } = req.body as { monthlyIncome?: unknown };
+  const { monthlyIncome, zipCode } = req.body as { monthlyIncome?: unknown; zipCode?: unknown };
 
   if (!monthlyIncome || typeof monthlyIncome !== "number" || monthlyIncome <= 0) {
     res.status(400).json({ error: "monthlyIncome must be a positive number" });
     return;
   }
+
+  const zipStr = typeof zipCode === "string" && /^\d{5}$/.test(zipCode.trim())
+    ? zipCode.trim()
+    : null;
 
   const categories = await db
     .select({ id: categoriesTable.id, name: categoriesTable.name })
@@ -39,12 +43,14 @@ router.post("/api/ai/suggest-budgets", requireAuth, async (req, res) => {
       {
         role: "user",
         content:
-          `Our combined monthly income is $${monthlyIncome.toFixed(2)}.\n` +
+          `Our combined monthly take-home income is $${monthlyIncome.toFixed(2)}.\n` +
+          (zipStr ? `We live in zip code ${zipStr} — use local cost-of-living data for that area to calibrate grocery and gas estimates accurately.\n` : "") +
           `We have these spending categories:\n${categoryList}\n\n` +
-          `Suggest a realistic monthly budget for each category. ` +
-          `The total of all suggestions should not exceed the monthly income. ` +
-          `Return a JSON array like: [{"categoryId": 1, "monthlyLimit": 500}, ...] ` +
-          `Include every category id from the list above.`,
+          `Suggest a realistic monthly budget for each category based on typical couple spending` +
+          (zipStr ? ` in zip code ${zipStr}` : "") + `. ` +
+          `The total of all suggestions must not exceed the monthly income. ` +
+          `Return ONLY a JSON array like: [{"categoryId": 1, "monthlyLimit": 500}, ...] ` +
+          `Include every category id from the list above. No markdown, no extra text.`,
       },
     ],
   });

@@ -49,6 +49,7 @@ export function Budgets() {
   // AI suggestion state
   const [aiOpen, setAiOpen] = useState(false);
   const [income, setIncome] = useState("");
+  const [zipCode, setZipCode] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<AISuggestion[] | null>(null);
   const [applying, setApplying] = useState(false);
@@ -114,7 +115,7 @@ export function Budgets() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ monthlyIncome: val }),
+        body: JSON.stringify({ monthlyIncome: val, ...(zipCode.trim() ? { zipCode: zipCode.trim() } : {}) }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json() as { suggestions: AISuggestion[] };
@@ -156,6 +157,7 @@ export function Budgets() {
     setAiOpen(false);
     setSuggestions(null);
     setIncome("");
+    setZipCode("");
     toast.success(`Applied ${applied} budget suggestions`);
   };
 
@@ -320,12 +322,22 @@ export function Budgets() {
                   step="100"
                   min="1"
                   className="pl-7"
-                  placeholder="e.g. 8000"
+                  placeholder="Monthly income, e.g. 8000"
                   value={income}
                   onChange={e => { setIncome(e.target.value); setSuggestions(null); }}
                   onKeyDown={e => e.key === "Enter" && handleAISuggest()}
                 />
               </div>
+              <Input
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
+                className="w-28 shrink-0"
+                placeholder="ZIP code"
+                value={zipCode}
+                onChange={e => { setZipCode(e.target.value.replace(/\D/g, "")); setSuggestions(null); }}
+                onKeyDown={e => e.key === "Enter" && handleAISuggest()}
+              />
               <Button onClick={handleAISuggest} disabled={aiLoading || !income} className="shrink-0">
                 {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate"}
               </Button>
