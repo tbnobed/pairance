@@ -18,7 +18,7 @@ const loginSchema = z.object({
 
 export function Login() {
   const [, setLocation] = useLocation();
-  const { data: user, isLoading } = useGetMe();
+  const { data: user, isLoading } = useGetMe({ query: { retry: false } });
   
   React.useEffect(() => {
     if (!isLoading && user) {

@@ -19,7 +19,7 @@ const registerSchema = z.object({
 
 export function Register() {
   const [, setLocation] = useLocation();
-  const { data: user, isLoading } = useGetMe();
+  const { data: user, isLoading } = useGetMe({ query: { retry: false } });
   
   React.useEffect(() => {
     if (!isLoading && user) {
