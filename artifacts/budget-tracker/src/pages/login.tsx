@@ -99,12 +99,6 @@ export function Login() {
             </form>
           </Form>
           
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            Don't have an account yet?{" "}
-            <Link href="/register" className="text-primary font-medium hover:underline cursor-pointer">
-              Create one
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>
