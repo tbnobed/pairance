@@ -355,7 +355,6 @@ export function Layout({ children }: LayoutProps) {
         ref={receiptInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={handleReceiptFile}
       />
