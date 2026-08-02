@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Heart, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { ConnectedAccounts } from "@/components/connected-accounts";
 
 const inviteSchema = z.object({
   spouseEmail: z.string().email("Please enter a valid email address"),
@@ -145,6 +146,8 @@ export function Settings() {
           </CardContent>
         </Card>
       </div>
+
+      <ConnectedAccounts />
     </div>
   );
 }

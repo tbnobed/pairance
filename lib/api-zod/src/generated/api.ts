@@ -441,3 +441,74 @@ export const GetSpendingByDayResponseItem = zod.object({
 export const GetSpendingByDayResponse = zod.array(GetSpendingByDayResponseItem)
 
 
+/**
+ * @summary Create a Plaid Link token to open the Link dialog
+ */
+export const CreatePlaidLinkTokenResponse = zod.object({
+  "linkToken": zod.string()
+})
+
+
+/**
+ * @summary Exchange a Plaid public_token for a permanent access_token
+ */
+export const ExchangePlaidTokenBody = zod.object({
+  "publicToken": zod.string(),
+  "institutionId": zod.string().nullish(),
+  "institutionName": zod.string()
+})
+
+export const ExchangePlaidTokenResponse = zod.object({
+  "item": zod.object({
+  "id": zod.number(),
+  "institutionName": zod.string(),
+  "accountCount": zod.number()
+})
+})
+
+
+/**
+ * @summary List connected bank institutions for the household
+ */
+export const ListPlaidItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "institutionId": zod.string().nullish(),
+  "institutionName": zod.string(),
+  "createdAt": zod.string(),
+  "accounts": zod.array(zod.object({
+  "id": zod.number(),
+  "accountId": zod.string(),
+  "name": zod.string(),
+  "officialName": zod.string().nullish(),
+  "type": zod.string(),
+  "subtype": zod.string().nullish(),
+  "mask": zod.string().nullish()
+}))
+})
+export const ListPlaidItemsResponse = zod.array(ListPlaidItemsResponseItem)
+
+
+/**
+ * @summary Sync transactions from Plaid into the household
+ */
+export const SyncPlaidTransactionsBody = zod.object({
+  "itemId": zod.number().nullish()
+})
+
+export const SyncPlaidTransactionsResponse = zod.object({
+  "added": zod.number(),
+  "modified": zod.number(),
+  "removed": zod.number()
+})
+
+
+/**
+ * @summary Unlink a connected bank institution
+ */
+export const DeletePlaidItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeletePlaidItemResponse = zod.void()
+
+

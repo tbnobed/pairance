@@ -22,6 +22,8 @@ tags:
     description: Geolocation check-in prompts
   - name: dashboard
     description: Dashboard summary data
+  - name: plaid
+    description: Plaid bank account connectivity
 paths:
   /healthz:
     get:
@@ -429,6 +431,87 @@ paths:
                 items:
                   $ref: "#/components/schemas/DailySpending"
 
+  /plaid/create-link-token:
+    post:
+      operationId: createPlaidLinkToken
+      tags: [plaid]
+      summary: Create a Plaid Link token to open the Link dialog
+      responses:
+        "200":
+          description: Link token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaidLinkTokenResponse"
+
+  /plaid/exchange-token:
+    post:
+      operationId: exchangePlaidToken
+      tags: [plaid]
+      summary: Exchange a Plaid public_token for a permanent access_token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaidExchangeTokenInput"
+      responses:
+        "200":
+          description: Item stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaidExchangeTokenResponse"
+
+  /plaid/items:
+    get:
+      operationId: listPlaidItems
+      tags: [plaid]
+      summary: List connected bank institutions for the household
+      responses:
+        "200":
+          description: List of Plaid items with accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlaidItem"
+
+  /plaid/sync:
+    post:
+      operationId: syncPlaidTransactions
+      tags: [plaid]
+      summary: Sync transactions from Plaid into the household
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaidSyncInput"
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaidSyncResult"
+
+  /plaid/items/{id}:
+    delete:
+      operationId: deletePlaidItem
+      tags: [plaid]
+      summary: Unlink a connected bank institution
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Unlinked
+
 components:
   schemas:
     HealthStatus:
@@ -718,4 +801,90 @@ components:
         date:
           type: string
         total:
+          type: number
+
+    PlaidLinkTokenResponse:
+      type: object
+      required: [linkToken]
+      properties:
+        linkToken:
+          type: string
+
+    PlaidExchangeTokenInput:
+      type: object
+      required: [publicToken, institutionName]
+      properties:
+        publicToken:
+          type: string
+        institutionId:
+          type: ["string", "null"]
+        institutionName:
+          type: string
+
+    PlaidExchangeTokenResponse:
+      type: object
+      required: [item]
+      properties:
+        item:
+          type: object
+          required: [id, institutionName, accountCount]
+          properties:
+            id:
+              type: number
+            institutionName:
+              type: string
+            accountCount:
+              type: number
+
+    PlaidAccount:
+      type: object
+      required: [id, accountId, name, type]
+      properties:
+        id:
+          type: number
+        accountId:
+          type: string
+        name:
+          type: string
+        officialName:
+          type: ["string", "null"]
+        type:
+          type: string
+        subtype:
+          type: ["string", "null"]
+        mask:
+          type: ["string", "null"]
+
+    PlaidItem:
+      type: object
+      required: [id, institutionName, createdAt, accounts]
+      properties:
+        id:
+          type: number
+        institutionId:
+          type: ["string", "null"]
+        institutionName:
+          type: string
+        createdAt:
+          type: string
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlaidAccount"
+
+    PlaidSyncInput:
+      type: object
+      properties:
+        itemId:
+          type: ["number", "null"]
+
+    PlaidSyncResult:
+      type: object
+      required: [added, modified, removed]
+      properties:
+        added:
+          type: number
+        modified:
+          type: number
+        removed:
           type: number

@@ -1,1 +1,2 @@
 - [Session Auth Quirks](session-auth-quirks.md) — connect-pg-simple table.sql breaks in esbuild; session cookies need Vite proxy + credentials:include; retry:false on useGetMe for public pages.
+- [DB Schema Migrations](db-migrations.md) — drizzle-kit push always requires TTY; use `psql "$DATABASE_URL"` with raw SQL for non-interactive schema changes.

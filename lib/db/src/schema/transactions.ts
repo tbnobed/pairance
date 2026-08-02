@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, numeric, date, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, numeric, date, real, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,6 +13,8 @@ export const transactionsTable = pgTable("transactions", {
   locationLat: real("location_lat"),
   locationLng: real("location_lng"),
   date: date("date", { mode: "string" }).notNull(),
+  /** Set when the transaction was imported from Plaid — used for deduplication */
+  plaidTransactionId: text("plaid_transaction_id").unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

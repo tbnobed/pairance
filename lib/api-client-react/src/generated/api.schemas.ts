@@ -185,6 +185,60 @@ export interface DailySpending {
   total: number;
 }
 
+export interface PlaidLinkTokenResponse {
+  linkToken: string;
+}
+
+export interface PlaidExchangeTokenInput {
+  publicToken: string;
+  /** @nullable */
+  institutionId?: string | null;
+  institutionName: string;
+}
+
+export type PlaidExchangeTokenResponseItem = {
+  id: number;
+  institutionName: string;
+  accountCount: number;
+};
+
+export interface PlaidExchangeTokenResponse {
+  item: PlaidExchangeTokenResponseItem;
+}
+
+export interface PlaidAccount {
+  id: number;
+  accountId: string;
+  name: string;
+  /** @nullable */
+  officialName?: string | null;
+  type: string;
+  /** @nullable */
+  subtype?: string | null;
+  /** @nullable */
+  mask?: string | null;
+}
+
+export interface PlaidItem {
+  id: number;
+  /** @nullable */
+  institutionId?: string | null;
+  institutionName: string;
+  createdAt: string;
+  accounts: PlaidAccount[];
+}
+
+export interface PlaidSyncInput {
+  /** @nullable */
+  itemId?: number | null;
+}
+
+export interface PlaidSyncResult {
+  added: number;
+  modified: number;
+  removed: number;
+}
+
 export type ListTransactionsParams = {
 /**
  * @nullable

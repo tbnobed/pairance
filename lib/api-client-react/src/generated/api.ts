@@ -35,6 +35,12 @@ import type {
   LocationCheckInInput,
   LocationCheckInResult,
   LoginInput,
+  PlaidExchangeTokenInput,
+  PlaidExchangeTokenResponse,
+  PlaidItem,
+  PlaidLinkTokenResponse,
+  PlaidSyncInput,
+  PlaidSyncResult,
   RegisterInput,
   Transaction,
   TransactionInput,
@@ -1765,4 +1771,365 @@ export function useGetSpendingByDay<TData = Awaited<ReturnType<typeof getSpendin
 
 
 
+
+export const getCreatePlaidLinkTokenUrl = () => {
+
+
+
+
+  return `/api/plaid/create-link-token`
+}
+
+/**
+ * @summary Create a Plaid Link token to open the Link dialog
+ */
+export const createPlaidLinkToken = async ( options?: Parameters<typeof customFetch>[1]): Promise<PlaidLinkTokenResponse> => {
+
+  return customFetch<PlaidLinkTokenResponse>(getCreatePlaidLinkTokenUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreatePlaidLinkTokenMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPlaidLinkToken>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPlaidLinkToken>>, TError,void, TContext> => {
+
+const mutationKey = ['createPlaidLinkToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPlaidLinkToken>>, void> = () => {
+
+
+          return  createPlaidLinkToken(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePlaidLinkTokenMutationResult = NonNullable<Awaited<ReturnType<typeof createPlaidLinkToken>>>
+
+    export type CreatePlaidLinkTokenMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a Plaid Link token to open the Link dialog
+ */
+export const useCreatePlaidLinkToken = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPlaidLinkToken>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPlaidLinkToken>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreatePlaidLinkTokenMutationOptions(options));
+    }
+
+export const getExchangePlaidTokenUrl = () => {
+
+
+
+
+  return `/api/plaid/exchange-token`
+}
+
+/**
+ * @summary Exchange a Plaid public_token for a permanent access_token
+ */
+export const exchangePlaidToken = async (plaidExchangeTokenInput: PlaidExchangeTokenInput, options?: Parameters<typeof customFetch>[1]): Promise<PlaidExchangeTokenResponse> => {
+
+  return customFetch<PlaidExchangeTokenResponse>(getExchangePlaidTokenUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(plaidExchangeTokenInput)
+  }
+);}
+
+
+
+
+
+export const getExchangePlaidTokenMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exchangePlaidToken>>, TError,{data: BodyType<PlaidExchangeTokenInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof exchangePlaidToken>>, TError,{data: BodyType<PlaidExchangeTokenInput>}, TContext> => {
+
+const mutationKey = ['exchangePlaidToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof exchangePlaidToken>>, {data: BodyType<PlaidExchangeTokenInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  exchangePlaidToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExchangePlaidTokenMutationResult = NonNullable<Awaited<ReturnType<typeof exchangePlaidToken>>>
+    export type ExchangePlaidTokenMutationBody = BodyType<PlaidExchangeTokenInput>
+    export type ExchangePlaidTokenMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Exchange a Plaid public_token for a permanent access_token
+ */
+export const useExchangePlaidToken = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof exchangePlaidToken>>, TError,{data: BodyType<PlaidExchangeTokenInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof exchangePlaidToken>>,
+        TError,
+        {data: BodyType<PlaidExchangeTokenInput>},
+        TContext
+      > => {
+      return useMutation(getExchangePlaidTokenMutationOptions(options));
+    }
+
+export const getListPlaidItemsUrl = () => {
+
+
+
+
+  return `/api/plaid/items`
+}
+
+/**
+ * @summary List connected bank institutions for the household
+ */
+export const listPlaidItems = async ( options?: Parameters<typeof customFetch>[1]): Promise<PlaidItem[]> => {
+
+  return customFetch<PlaidItem[]>(getListPlaidItemsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPlaidItemsQueryKey = () => {
+    return [
+    `/api/plaid/items`
+    ] as const;
+    }
+
+
+export const getListPlaidItemsQueryOptions = <TData = Awaited<ReturnType<typeof listPlaidItems>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPlaidItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPlaidItemsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPlaidItems>>> = ({ signal }) => listPlaidItems({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPlaidItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPlaidItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listPlaidItems>>>
+export type ListPlaidItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List connected bank institutions for the household
+ */
+
+export function useListPlaidItems<TData = Awaited<ReturnType<typeof listPlaidItems>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPlaidItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPlaidItemsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSyncPlaidTransactionsUrl = () => {
+
+
+
+
+  return `/api/plaid/sync`
+}
+
+/**
+ * @summary Sync transactions from Plaid into the household
+ */
+export const syncPlaidTransactions = async (plaidSyncInput?: PlaidSyncInput, options?: Parameters<typeof customFetch>[1]): Promise<PlaidSyncResult> => {
+
+  return customFetch<PlaidSyncResult>(getSyncPlaidTransactionsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(plaidSyncInput)
+  }
+);}
+
+
+
+
+
+export const getSyncPlaidTransactionsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncPlaidTransactions>>, TError,{data?: BodyType<PlaidSyncInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof syncPlaidTransactions>>, TError,{data?: BodyType<PlaidSyncInput>}, TContext> => {
+
+const mutationKey = ['syncPlaidTransactions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncPlaidTransactions>>, {data?: BodyType<PlaidSyncInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  syncPlaidTransactions(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SyncPlaidTransactionsMutationResult = NonNullable<Awaited<ReturnType<typeof syncPlaidTransactions>>>
+    export type SyncPlaidTransactionsMutationBody = BodyType<PlaidSyncInput> | undefined
+    export type SyncPlaidTransactionsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Sync transactions from Plaid into the household
+ */
+export const useSyncPlaidTransactions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncPlaidTransactions>>, TError,{data?: BodyType<PlaidSyncInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof syncPlaidTransactions>>,
+        TError,
+        {data?: BodyType<PlaidSyncInput>},
+        TContext
+      > => {
+      return useMutation(getSyncPlaidTransactionsMutationOptions(options));
+    }
+
+export const getDeletePlaidItemUrl = (id: number,) => {
+
+
+
+
+  return `/api/plaid/items/${id}`
+}
+
+/**
+ * @summary Unlink a connected bank institution
+ */
+export const deletePlaidItem = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeletePlaidItemUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePlaidItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePlaidItem>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePlaidItem>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePlaidItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePlaidItem>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePlaidItem(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePlaidItemMutationResult = NonNullable<Awaited<ReturnType<typeof deletePlaidItem>>>
+
+    export type DeletePlaidItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Unlink a connected bank institution
+ */
+export const useDeletePlaidItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePlaidItem>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePlaidItem>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePlaidItemMutationOptions(options));
+    }
 
