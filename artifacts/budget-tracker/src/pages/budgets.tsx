@@ -127,7 +127,7 @@ export function Budgets() {
   const [draftPlan, setDraftPlan] = useState<MonthlyPlan>(plan);
   useEffect(() => { setDraftPlan(plan); }, [planOpen]);
 
-  // AI suggestion state
+  // AI suggestion state — pre-seeded from saved plan
   const [aiOpen, setAiOpen] = useState(false);
   const [income, setIncome] = useState("");
   const [zipCode, setZipCode] = useState("");
@@ -136,6 +136,18 @@ export function Budgets() {
   const [insurance, setInsurance] = useState("");
   const [utilities, setUtilities] = useState("");
   const [savings, setSavings] = useState("");
+
+  // When AI dialog opens, pre-fill from saved plan
+  useEffect(() => {
+    if (aiOpen) {
+      setIncome(plan.income);
+      setRent(plan.rent);
+      setCarPayment(plan.carPayment);
+      setInsurance(plan.insurance);
+      setUtilities(plan.utilities);
+      setSavings(plan.savings);
+    }
+  }, [aiOpen]);
   const [aiLoading, setAiLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<AISuggestion[] | null>(null);
   const [applying, setApplying] = useState(false);
@@ -228,6 +240,8 @@ export function Budgets() {
     if (!val || val <= 0) { toast.error("Enter a valid monthly income"); return; }
     setAiLoading(true);
     setSuggestions(null);
+    // Persist entered values back into the monthly plan
+    savePlan({ income, rent, carPayment, insurance, utilities, savings });
     try {
       const res = await fetch("/api/ai/suggest-budgets", {
         method: "POST",
