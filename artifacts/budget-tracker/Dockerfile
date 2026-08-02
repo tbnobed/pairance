@@ -5,7 +5,7 @@ RUN corepack enable && corepack prepare pnpm@10.26.1 --activate
 
 WORKDIR /app
 
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
 COPY lib lib
 COPY artifacts/budget-tracker artifacts/budget-tracker
 

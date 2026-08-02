@@ -6,7 +6,7 @@ RUN corepack enable && corepack prepare pnpm@10.26.1 --activate
 WORKDIR /app
 
 # Copy workspace manifests + lib sources (lib packages are consumed from source)
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
 COPY lib lib
 COPY artifacts/api-server artifacts/api-server
 
