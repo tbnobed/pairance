@@ -515,3 +515,20 @@ CREATE INDEX "IDX_user_sessions_expire" ON public.user_sessions USING btree (exp
 
 \unrestrict crzP9evg7bJ8BzdYqgkqkghB0OCR1BQtUfBOCC3thz97LT8sDcyhGBG9k8tXuZD
 
+
+--
+-- Name: recurring_transactions; Type: TABLE
+--
+
+CREATE TABLE IF NOT EXISTS public.recurring_transactions (
+    id serial PRIMARY KEY,
+    description text NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    category_id integer NOT NULL,
+    user_id integer NOT NULL,
+    household_id integer NOT NULL,
+    day_of_month integer NOT NULL DEFAULT 1,
+    active boolean NOT NULL DEFAULT true,
+    last_posted_month text,
+    created_at timestamptz NOT NULL DEFAULT now()
+);

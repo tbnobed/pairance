@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, or, ilike } from "drizzle-orm";
 import { db, transactionsTable, categoriesTable, usersTable } from "@workspace/db";
 import {
   CreateTransactionBody,
@@ -37,9 +37,28 @@ function serializeTransaction(
 }
 
 async function enrichTransaction(t: typeof transactionsTable.$inferSelect) {
-  const [cat] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, t.categoryId)).limit(1);
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, t.userId)).limit(1);
+  // Scope lookups to the transaction's household so a crafted foreign ID can
+  // never leak another household's category/user names.
+  const [cat] = await db
+    .select()
+    .from(categoriesTable)
+    .where(and(eq(categoriesTable.id, t.categoryId), eq(categoriesTable.householdId, t.householdId)))
+    .limit(1);
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(and(eq(usersTable.id, t.userId), eq(usersTable.householdId, t.householdId)))
+    .limit(1);
   return serializeTransaction(t, cat?.name, cat?.color, user?.name);
+}
+
+async function categoryBelongsToHousehold(categoryId: number, householdId: number): Promise<boolean> {
+  const [cat] = await db
+    .select({ id: categoriesTable.id })
+    .from(categoriesTable)
+    .where(and(eq(categoriesTable.id, categoryId), eq(categoriesTable.householdId, householdId)))
+    .limit(1);
+  return !!cat;
 }
 
 router.get("/transactions", requireAuth, async (req, res): Promise<void> => {
@@ -49,9 +68,9 @@ router.get("/transactions", requireAuth, async (req, res): Promise<void> => {
     return;
   }
   const householdId = (req as any).householdId;
-  const { categoryId, userId, limit = 50, offset = 0 } = qp.data;
+  const { categoryId, userId, limit = 50, offset = 0, search } = qp.data;
 
-  let query = db.select().from(transactionsTable).where(eq(transactionsTable.householdId, householdId));
+  const searchTerm = typeof search === "string" ? search.trim() : "";
 
   const rows = await db
     .select()
@@ -61,6 +80,14 @@ router.get("/transactions", requireAuth, async (req, res): Promise<void> => {
         eq(transactionsTable.householdId, householdId),
         ...(categoryId ? [eq(transactionsTable.categoryId, categoryId)] : []),
         ...(userId ? [eq(transactionsTable.userId, userId)] : []),
+        ...(searchTerm
+          ? [
+              or(
+                ilike(transactionsTable.description, `%${searchTerm}%`),
+                ilike(transactionsTable.locationName, `%${searchTerm}%`),
+              ),
+            ]
+          : []),
       ),
     )
     .orderBy(desc(transactionsTable.date), desc(transactionsTable.createdAt))
@@ -80,6 +107,11 @@ router.post("/transactions", requireAuth, async (req, res): Promise<void> => {
   const userId = (req as any).userId;
   const householdId = (req as any).householdId;
   const { amount, description, categoryId, date, locationName, locationLat, locationLng } = parsed.data;
+
+  if (!(await categoryBelongsToHousehold(categoryId, householdId))) {
+    res.status(400).json({ error: "Unknown category" });
+    return;
+  }
 
   const [t] = await db.insert(transactionsTable).values({
     amount: String(amount),
@@ -128,6 +160,12 @@ router.patch("/transactions/:id", requireAuth, async (req, res): Promise<void> =
     return;
   }
   const householdId = (req as any).householdId;
+
+  if (parsed.data.categoryId !== undefined && !(await categoryBelongsToHousehold(parsed.data.categoryId, householdId))) {
+    res.status(400).json({ error: "Unknown category" });
+    return;
+  }
+
   const updates: Record<string, unknown> = {};
   if (parsed.data.amount !== undefined) updates.amount = String(parsed.data.amount);
   if (parsed.data.description !== undefined) updates.description = parsed.data.description;

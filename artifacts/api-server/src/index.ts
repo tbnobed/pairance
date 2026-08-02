@@ -1,6 +1,8 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedInitialAccount } from "./seed";
+import { startRecurringPoster } from "./recurringPoster";
+import { runStartupMigrations } from "./migrate";
 
 const rawPort = process.env["PORT"];
 
@@ -24,7 +26,12 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 
-  seedInitialAccount().catch((err) => {
-    logger.error({ err }, "Failed to seed initial account");
-  });
+  runStartupMigrations()
+    .then(() => {
+      startRecurringPoster();
+      return seedInitialAccount();
+    })
+    .catch((err) => {
+      logger.error({ err }, "Startup migrations/seed failed");
+    });
 });

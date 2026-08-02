@@ -9,6 +9,7 @@ import dashboardRouter from "./dashboard";
 import aiRouter from "./ai";
 import plaidRouter from "./plaid";
 import planRouter from "./plan";
+import recurringRouter from "./recurring";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use(dashboardRouter);
 router.use(aiRouter);
 router.use(plaidRouter);
 router.use(planRouter);
+router.use(recurringRouter);
 
 export default router;

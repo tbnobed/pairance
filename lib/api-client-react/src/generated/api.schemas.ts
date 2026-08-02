@@ -277,5 +277,9 @@ limit?: number | null;
  * @nullable
  */
 offset?: number | null;
+/**
+ * @nullable
+ */
+search?: string | null;
 };
 

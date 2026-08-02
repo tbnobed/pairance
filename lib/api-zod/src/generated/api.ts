@@ -154,7 +154,8 @@ export const ListTransactionsQueryParams = zod.object({
   "categoryId": zod.coerce.number().nullish(),
   "userId": zod.coerce.number().nullish(),
   "limit": zod.coerce.number().nullish(),
-  "offset": zod.coerce.number().nullish()
+  "offset": zod.coerce.number().nullish(),
+  "search": zod.coerce.string().nullish()
 })
 
 export const ListTransactionsResponseItem = zod.object({

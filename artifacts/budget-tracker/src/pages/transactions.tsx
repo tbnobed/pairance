@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   useListTransactions, 
   useListCategories, 
@@ -18,6 +18,7 @@ import {
   Edit3, 
   Search,
   Filter,
+  Repeat,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -27,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionModal } from "@/components/transaction-modal";
+import { RecurringManager } from "@/components/recurring-manager";
 import { toast } from "sonner";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -34,8 +36,19 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 export function Transactions() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [recurringOpen, setRecurringOpen] = useState(false);
   const [page, setPage] = useState(0);
+
+  // Debounce search so we don't hit the server on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
   const [pageSize, setPageSize] = useState<number>(() => {
     const saved = parseInt(localStorage.getItem("txPageSize") || "", 10);
     return PAGE_SIZE_OPTIONS.includes(saved) ? saved : 25;
@@ -55,6 +68,7 @@ export function Transactions() {
   // Fetch one extra row to know whether a next page exists
   const { data: pageRows, isLoading } = useListTransactions({
     ...(categoryIdFilter ? { categoryId: categoryIdFilter } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
     limit: pageSize + 1,
     offset: page * pageSize,
   }, { query: { placeholderData: (prev: Transaction[] | undefined) => prev } as never });
@@ -88,10 +102,8 @@ export function Transactions() {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   };
 
-  const filteredTransactions = transactions?.filter(tx => 
-    tx.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (tx.locationName && tx.locationName.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Search is now server-side (full history), so no client-side filtering
+  const filteredTransactions = transactions;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -101,7 +113,11 @@ export function Transactions() {
           <p className="text-muted-foreground mt-1">Review and manage your shared spending history.</p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" size="sm" className="bg-card border-none shadow-sm" onClick={() => setRecurringOpen(true)}>
+            <Repeat className="w-4 h-4 mr-2" />
+            Recurring
+          </Button>
           <div className="relative w-full md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
@@ -248,6 +264,8 @@ export function Transactions() {
           </div>
         )}
       </div>
+
+      <RecurringManager open={recurringOpen} onClose={() => setRecurringOpen(false)} />
 
       {editingTx && (
         <TransactionModal 

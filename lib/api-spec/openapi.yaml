@@ -187,6 +187,10 @@ paths:
           in: query
           schema:
             type: ["number", "null"]
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
       responses:
         "200":
           description: List of transactions
