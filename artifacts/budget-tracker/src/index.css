@@ -182,50 +182,52 @@
   --elevate-1: rgba(255, 255, 255, 0.04);
   --elevate-2: rgba(255, 255, 255, 0.09);
 
-  --background: 26 33% 14%;
-  --foreground: 41 45% 92%;
+  /* Main area: near-black */
+  --background: 0 0% 4%;
+  --foreground: 40 33% 95%;
 
-  --border: 26 33% 20%;
-  --input: 26 33% 20%;
-  --ring: 14 65% 60%;
+  --border: 0 0% 15%;
+  --input: 0 0% 15%;
+  --ring: 159 55% 62%;
 
-  --card: 26 33% 18%;
-  --card-foreground: 41 45% 92%;
-  --card-border: 26 33% 22%;
+  --card: 0 0% 8%;
+  --card-foreground: 40 33% 95%;
+  --card-border: 0 0% 14%;
 
-  --sidebar: 26 33% 16%;
-  --sidebar-foreground: 41 45% 92%;
-  --sidebar-border: 26 33% 20%;
-  --sidebar-primary: 14 65% 60%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 26 33% 22%;
-  --sidebar-accent-foreground: 41 45% 92%;
-  --sidebar-ring: 14 65% 60%;
+  /* Sidebar: same Midnight Navy as light mode */
+  --sidebar: 220 38% 15%;          /* #182235 */
+  --sidebar-foreground: 40 33% 95%;
+  --sidebar-border: 221 36% 19%;   /* navyRaised #1E2A40 */
+  --sidebar-primary: 159 55% 62%;  /* Mint */
+  --sidebar-primary-foreground: 220 38% 15%;
+  --sidebar-accent: 221 36% 19%;
+  --sidebar-accent-foreground: 40 33% 95%;
+  --sidebar-ring: 159 55% 62%;
 
-  --popover: 26 33% 18%;
-  --popover-foreground: 41 45% 92%;
-  --popover-border: 26 33% 22%;
+  --popover: 0 0% 8%;
+  --popover-foreground: 40 33% 95%;
+  --popover-border: 0 0% 14%;
 
-  --primary: 14 65% 60%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 159 55% 62%;          /* Mint Leaf */
+  --primary-foreground: 220 38% 15%;
 
-  --secondary: 120 15% 60%;
-  --secondary-foreground: 26 33% 14%;
+  --secondary: 177 56% 42%;        /* Teal Current */
+  --secondary-foreground: 40 33% 95%;
 
-  --muted: 26 33% 22%;
-  --muted-foreground: 36 25% 70%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 220 9% 65%;
 
-  --accent: 26 33% 22%;
-  --accent-foreground: 41 45% 92%;
+  --accent: 0 0% 12%;
+  --accent-foreground: 40 33% 95%;
 
-  --destructive: 5 70% 50%;
-  --destructive-foreground: 0 0% 100%;
+  --destructive: 8 100% 74%;       /* Warm Coral */
+  --destructive-foreground: 220 38% 15%;
 
-  --chart-1: 14 65% 60%;
-  --chart-2: 120 15% 60%;
-  --chart-3: 35 75% 60%;
-  --chart-4: 280 40% 60%;
-  --chart-5: 200 30% 60%;
+  --chart-1: 159 55% 62%;
+  --chart-2: 177 56% 42%;
+  --chart-3: 8 100% 74%;
+  --chart-4: 220 9% 55%;
+  --chart-5: 40 33% 85%;
 
   --shadow-2xs: 0px 2px 0px 0px rgba(0, 0, 0, 0.2);
   --shadow-xs: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
