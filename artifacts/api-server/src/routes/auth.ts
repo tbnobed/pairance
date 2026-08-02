@@ -124,6 +124,42 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   res.json(serializeUser(user, spouseName));
 });
 
+// Create the partner's account directly (no public registration).
+// The logged-in user sets their partner's name/email/password; the new
+// account is placed into the same household immediately.
+router.post("/auth/create-partner", requireAuth, async (req, res): Promise<void> => {
+  const parsed = RegisterBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { name, email, password } = parsed.data;
+  const userId = (req as any).userId;
+
+  const [currentUser] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!currentUser?.householdId) {
+    res.status(400).json({ error: "No household found" });
+    return;
+  }
+
+  const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+  if (existing.length > 0) {
+    res.status(400).json({ error: "Email already registered" });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  await db.insert(usersTable).values({
+    name,
+    email,
+    passwordHash,
+    householdId: currentUser.householdId,
+  });
+
+  const spouseName = await getSpouseName(currentUser);
+  res.status(201).json(serializeUser(currentUser, spouseName));
+});
+
 router.post("/auth/invite", requireAuth, async (req, res): Promise<void> => {
   const parsed = InviteSpouseBody.safeParse(req.body);
   if (!parsed.success) {

@@ -442,6 +442,77 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
+export const getCreatePartnerUrl = () => {
+
+
+
+
+  return `/api/auth/create-partner`
+}
+
+/**
+ * @summary Create the partner's account and place it in the caller's household
+ */
+export const createPartner = async (registerInput: RegisterInput, options?: Parameters<typeof customFetch>[1]): Promise<User> => {
+
+  return customFetch<User>(getCreatePartnerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(registerInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePartnerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPartner>>, TError,{data: BodyType<RegisterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPartner>>, TError,{data: BodyType<RegisterInput>}, TContext> => {
+
+const mutationKey = ['createPartner'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPartner>>, {data: BodyType<RegisterInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPartner(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePartnerMutationResult = NonNullable<Awaited<ReturnType<typeof createPartner>>>
+    export type CreatePartnerMutationBody = BodyType<RegisterInput>
+    export type CreatePartnerMutationError = ErrorType<void>
+
+    /**
+ * @summary Create the partner's account and place it in the caller's household
+ */
+export const useCreatePartner = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPartner>>, TError,{data: BodyType<RegisterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPartner>>,
+        TError,
+        {data: BodyType<RegisterInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePartnerMutationOptions(options));
+    }
+
 export const getInviteSpouseUrl = () => {
 
 

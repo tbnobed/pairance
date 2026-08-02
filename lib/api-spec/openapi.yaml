@@ -104,6 +104,27 @@ paths:
         "401":
           description: Unauthorized
 
+  /auth/create-partner:
+    post:
+      operationId: createPartner
+      tags: [auth]
+      summary: Create the partner's account and place it in the caller's household
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Partner account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request
+
   /auth/invite:
     post:
       operationId: inviteSpouse

@@ -96,13 +96,7 @@ export function Login() {
               </Button>
             </form>
           </Form>
-
-          <p className="text-sm text-muted-foreground text-center mt-6">
-            Need an account?{" "}
-            <Link href="/register" className="text-secondary font-medium hover:underline">
-              Create one
-            </Link>
-          </p>
+          
         </CardContent>
       </Card>
     </div>

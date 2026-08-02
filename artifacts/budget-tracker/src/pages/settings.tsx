@@ -2,7 +2,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useGetMe, useInviteSpouse, getGetMeQueryKey } from "@workspace/api-client-react";
+import { useGetMe, useCreatePartner, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,31 +13,35 @@ import { Heart, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { ConnectedAccounts } from "@/components/connected-accounts";
 
-const inviteSchema = z.object({
-  spouseEmail: z.string().email("Please enter a valid email address"),
+const partnerSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export function Settings() {
   const queryClient = useQueryClient();
   const { data: user } = useGetMe();
-  const inviteSpouse = useInviteSpouse();
+  const createPartner = useCreatePartner();
 
-  const form = useForm<z.infer<typeof inviteSchema>>({
-    resolver: zodResolver(inviteSchema),
+  const form = useForm<z.infer<typeof partnerSchema>>({
+    resolver: zodResolver(partnerSchema),
     defaultValues: {
-      spouseEmail: "",
+      name: "",
+      email: "",
+      password: "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof inviteSchema>) => {
-    inviteSpouse.mutate({ data: values }, {
+  const onSubmit = (values: z.infer<typeof partnerSchema>) => {
+    createPartner.mutate({ data: values }, {
       onSuccess: () => {
-        toast.success("Partner linked to your household!");
+        toast.success("Partner account created! They can now log in with the email and password you set.");
         form.reset();
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       },
-      onError: (err) => {
-        toast.error("No account found with that email. Ask your partner to sign up first, then try again.");
+      onError: () => {
+        toast.error("Couldn't create the account — that email may already be in use.");
       }
     });
   };
@@ -116,15 +120,29 @@ export function Settings() {
                 <div className="pt-2">
                   <h4 className="font-medium mb-3 text-sm flex items-center gap-2">
                     <UserPlus className="w-4 h-4 text-primary" />
-                    Link your partner
+                    Create your partner's account
                   </h4>
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
                       <FormField
                         control={form.control}
-                        name="spouseEmail"
+                        name="name"
                         render={({ field }) => (
-                          <FormItem className="flex-1">
+                          <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Partner's name" className="bg-background shadow-sm" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
                               <Input placeholder="partner@example.com" className="bg-background shadow-sm" {...field} />
                             </FormControl>
@@ -132,13 +150,26 @@ export function Settings() {
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" disabled={inviteSpouse.isPending} className="shadow-sm">
-                        {inviteSpouse.isPending ? "Linking..." : "Link Partner"}
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="At least 8 characters" className="bg-background shadow-sm" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" disabled={createPartner.isPending} className="shadow-sm w-full">
+                        {createPartner.isPending ? "Creating..." : "Create Partner Account"}
                       </Button>
                     </form>
                   </Form>
                   <p className="text-xs text-muted-foreground mt-3 leading-relaxed max-w-[400px]">
-                    Your partner must create their own account first. Once they've signed up, enter their email here and they'll be linked to your household instantly. No email is sent — share the site link with them yourself.
+                    This creates their login and links them to your household instantly. Share the email and password with them — they can log in right away. There is no public sign-up page.
                   </p>
                 </div>
               </div>

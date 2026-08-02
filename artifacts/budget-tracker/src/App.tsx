@@ -4,7 +4,6 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { Layout } from '@/components/layout';
 import { Login } from '@/pages/login';
-import { Register } from '@/pages/register';
 import { Dashboard } from '@/pages/dashboard';
 import { Transactions } from '@/pages/transactions';
 import { Categories } from '@/pages/categories';
@@ -19,7 +18,6 @@ function Router() {
     <Switch>
       <Route path="/"><Login /></Route>
       <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
 
       {/* Authenticated Routes wrapped in Layout */}
       <Route path="/dashboard">

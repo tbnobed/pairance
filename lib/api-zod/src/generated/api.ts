@@ -83,6 +83,31 @@ export const GetMeResponse = zod.object({
 
 
 /**
+ * @summary Create the partner's account and place it in the caller's household
+ */
+
+
+export const createPartnerBodyPasswordMin = 8;
+
+
+
+export const CreatePartnerBody = zod.object({
+  "name": zod.string().min(1),
+  "email": zod.string().min(1),
+  "password": zod.string().min(createPartnerBodyPasswordMin)
+})
+
+export const CreatePartnerResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "householdId": zod.number().nullable(),
+  "spouseName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Invite spouse by email to join the shared household
  */
 export const InviteSpouseBody = zod.object({
