@@ -7,7 +7,21 @@ import { openai } from "@workspace/integrations-openai-ai-server";
 const router = Router();
 
 router.post("/api/ai/suggest-budgets", requireAuth, async (req, res) => {
-  const { monthlyIncome, zipCode } = req.body as { monthlyIncome?: unknown; zipCode?: unknown };
+  const {
+    monthlyIncome,
+    zipCode,
+    rent,
+    carPayment,
+    insurance,
+    utilities,
+  } = req.body as {
+    monthlyIncome?: unknown;
+    zipCode?: unknown;
+    rent?: unknown;
+    carPayment?: unknown;
+    insurance?: unknown;
+    utilities?: unknown;
+  };
 
   if (!monthlyIncome || typeof monthlyIncome !== "number" || monthlyIncome <= 0) {
     res.status(400).json({ error: "monthlyIncome must be a positive number" });
@@ -17,6 +31,15 @@ router.post("/api/ai/suggest-budgets", requireAuth, async (req, res) => {
   const zipStr = typeof zipCode === "string" && /^\d{5}$/.test(zipCode.trim())
     ? zipCode.trim()
     : null;
+
+  const fixedExpenses: { label: string; amount: number }[] = [];
+  if (typeof rent === "number" && rent > 0) fixedExpenses.push({ label: "Rent/Mortgage", amount: rent });
+  if (typeof carPayment === "number" && carPayment > 0) fixedExpenses.push({ label: "Car Payment(s)", amount: carPayment });
+  if (typeof insurance === "number" && insurance > 0) fixedExpenses.push({ label: "Insurance (health/auto/home)", amount: insurance });
+  if (typeof utilities === "number" && utilities > 0) fixedExpenses.push({ label: "Utilities (electric/internet/phone)", amount: utilities });
+
+  const totalFixed = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const discretionary = monthlyIncome - totalFixed;
 
   const categories = await db
     .select({ id: categoriesTable.id, name: categoriesTable.name })
@@ -42,15 +65,20 @@ router.post("/api/ai/suggest-budgets", requireAuth, async (req, res) => {
       },
       {
         role: "user",
-        content:
-          `Our combined monthly take-home income is $${monthlyIncome.toFixed(2)}.\n` +
-          (zipStr ? `We live in zip code ${zipStr} — use local cost-of-living data for that area to calibrate grocery and gas estimates accurately.\n` : "") +
-          `We have these spending categories:\n${categoryList}\n\n` +
+        content: [
+          `Our combined monthly take-home income is $${monthlyIncome.toFixed(2)}.`,
+          zipStr ? `We live in zip code ${zipStr} — use local cost-of-living data to calibrate grocery and gas estimates for that area.` : "",
+          fixedExpenses.length > 0
+            ? `We already have these fixed monthly commitments (do NOT include these in your suggestions — they are already paid):\n` +
+              fixedExpenses.map(e => `  - ${e.label}: $${e.amount.toFixed(2)}`).join("\n") +
+              `\n  Total fixed: $${totalFixed.toFixed(2)}\n  Remaining to allocate: $${discretionary.toFixed(2)}`
+            : "",
+          `We have these spending categories:\n${categoryList}`,
           `Suggest a realistic monthly budget for each category based on typical couple spending` +
-          (zipStr ? ` in zip code ${zipStr}` : "") + `. ` +
-          `The total of all suggestions must not exceed the monthly income. ` +
-          `Return ONLY a JSON array like: [{"categoryId": 1, "monthlyLimit": 500}, ...] ` +
-          `Include every category id from the list above. No markdown, no extra text.`,
+            (zipStr ? ` in zip code ${zipStr}` : "") + `.`,
+          `The total of ALL suggestions combined must not exceed $${Math.max(0, discretionary).toFixed(2)} (the discretionary amount after fixed expenses).`,
+          `Return ONLY a JSON array like: [{"categoryId": 1, "monthlyLimit": 500}, ...]. Include every category id. No markdown, no extra text.`,
+        ].filter(Boolean).join("\n"),
       },
     ],
   });

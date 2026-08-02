@@ -50,6 +50,10 @@ export function Budgets() {
   const [aiOpen, setAiOpen] = useState(false);
   const [income, setIncome] = useState("");
   const [zipCode, setZipCode] = useState("");
+  const [rent, setRent] = useState("");
+  const [carPayment, setCarPayment] = useState("");
+  const [insurance, setInsurance] = useState("");
+  const [utilities, setUtilities] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<AISuggestion[] | null>(null);
   const [applying, setApplying] = useState(false);
@@ -115,7 +119,14 @@ export function Budgets() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ monthlyIncome: val, ...(zipCode.trim() ? { zipCode: zipCode.trim() } : {}) }),
+        body: JSON.stringify({
+        monthlyIncome: val,
+        ...(zipCode.trim() ? { zipCode: zipCode.trim() } : {}),
+        ...(rent ? { rent: parseFloat(rent) } : {}),
+        ...(carPayment ? { carPayment: parseFloat(carPayment) } : {}),
+        ...(insurance ? { insurance: parseFloat(insurance) } : {}),
+        ...(utilities ? { utilities: parseFloat(utilities) } : {}),
+      }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json() as { suggestions: AISuggestion[] };
@@ -158,6 +169,10 @@ export function Budgets() {
     setSuggestions(null);
     setIncome("");
     setZipCode("");
+    setRent("");
+    setCarPayment("");
+    setInsurance("");
+    setUtilities("");
     toast.success(`Applied ${applied} budget suggestions`);
   };
 
@@ -314,34 +329,58 @@ export function Budgets() {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Income + ZIP */}
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <Input
-                  type="number"
-                  step="100"
-                  min="1"
-                  className="pl-7"
-                  placeholder="Monthly income, e.g. 8000"
-                  value={income}
-                  onChange={e => { setIncome(e.target.value); setSuggestions(null); }}
-                  onKeyDown={e => e.key === "Enter" && handleAISuggest()}
-                />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <Input type="number" step="100" min="1" className="pl-7" placeholder="Monthly take-home income"
+                  value={income} onChange={e => { setIncome(e.target.value); setSuggestions(null); }}
+                  onKeyDown={e => e.key === "Enter" && handleAISuggest()} />
               </div>
-              <Input
-                type="text"
-                inputMode="numeric"
-                maxLength={5}
-                className="w-28 shrink-0"
-                placeholder="ZIP code"
-                value={zipCode}
-                onChange={e => { setZipCode(e.target.value.replace(/\D/g, "")); setSuggestions(null); }}
-                onKeyDown={e => e.key === "Enter" && handleAISuggest()}
-              />
-              <Button onClick={handleAISuggest} disabled={aiLoading || !income} className="shrink-0">
-                {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate"}
-              </Button>
+              <Input type="text" inputMode="numeric" maxLength={5} className="w-28 shrink-0" placeholder="ZIP code"
+                value={zipCode} onChange={e => { setZipCode(e.target.value.replace(/\D/g, "")); setSuggestions(null); }}
+                onKeyDown={e => e.key === "Enter" && handleAISuggest()} />
             </div>
+
+            {/* Fixed expenses */}
+            <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fixed monthly expenses (optional)</p>
+              <p className="text-xs text-muted-foreground -mt-1">These are deducted first — AI allocates only what's left.</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Rent / Mortgage", value: rent, setter: setRent, placeholder: "e.g. 1800" },
+                  { label: "Car Payment(s)", value: carPayment, setter: setCarPayment, placeholder: "e.g. 500" },
+                  { label: "Insurance", value: insurance, setter: setInsurance, placeholder: "e.g. 300" },
+                  { label: "Utilities", value: utilities, setter: setUtilities, placeholder: "e.g. 200" },
+                ].map(({ label, value, setter, placeholder }) => (
+                  <div key={label}>
+                    <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                      <Input type="number" step="50" min="0" className="pl-7 h-9 text-sm" placeholder={placeholder}
+                        value={value} onChange={e => { setter(e.target.value); setSuggestions(null); }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {income && (rent || carPayment || insurance || utilities) && (() => {
+                const fixed = [rent, carPayment, insurance, utilities].reduce((s, v) => s + (parseFloat(v) || 0), 0);
+                const left = parseFloat(income) - fixed;
+                return (
+                  <div className="flex justify-between text-xs pt-1 border-t border-border">
+                    <span className="text-muted-foreground">Fixed: {formatCurrency(fixed)}</span>
+                    <span className={left < 0 ? "text-destructive font-medium" : "text-primary font-medium"}>
+                      Discretionary: {formatCurrency(Math.max(0, left))}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <Button onClick={handleAISuggest} disabled={aiLoading || !income} className="w-full gap-2">
+              {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {aiLoading ? "Generating…" : "Generate Budget"}
+            </Button>
 
             {aiLoading && (
               <div className="space-y-2">
