@@ -25,6 +25,10 @@ services:
       PLAID_CLIENT_ID: ${PLAID_CLIENT_ID:?set PLAID_CLIENT_ID in .env}
       PLAID_SECRET: ${PLAID_SECRET:?set PLAID_SECRET in .env}
       PLAID_ENV: ${PLAID_ENV:-sandbox}
+      # First-boot account seed (only used when the users table is empty):
+      SEED_EMAIL: ${SEED_EMAIL:-}
+      SEED_PASSWORD: ${SEED_PASSWORD:-}
+      SEED_NAME: ${SEED_NAME:-}
       # Only needed if you use the AI budget suggestions feature outside Replit:
       AI_INTEGRATIONS_OPENAI_API_KEY: ${AI_INTEGRATIONS_OPENAI_API_KEY:-}
       AI_INTEGRATIONS_OPENAI_BASE_URL: ${AI_INTEGRATIONS_OPENAI_BASE_URL:-}
