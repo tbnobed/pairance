@@ -127,7 +127,10 @@ export function Budgets() {
     }
     // Spent must be recomputed for the month being viewed (the server's
     // "spent" belongs to the month the budget row was created in).
-    return Array.from(byCategory.values()).map((b) => ({
+    return Array.from(byCategory.values())
+      // A $0 budget is a "removed from this month onward" marker — hide it.
+      .filter((b) => b.monthlyLimit > 0)
+      .map((b) => ({
       ...b,
       spent: monthTransactions
         .filter((t) => t.categoryId === b.categoryId)
@@ -218,9 +221,24 @@ export function Budgets() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (budget: Budget) => {
+    // Deleting a budget that was carried forward from an earlier month would
+    // erase it from those past months too. Set a $0 override for this month
+    // onward instead; only rows created in the viewed month are truly deleted.
+    if (!budget.month.startsWith(activeMonthKey)) {
+      if (confirm("This budget carries over from an earlier month. Remove it from this month onward? (Past months keep it.)")) {
+        createBudget.mutate({ data: { categoryId: budget.categoryId, monthlyLimit: 0, month: activeMonthStr } }, {
+          onSuccess: () => {
+            toast.success("Budget removed from this month onward");
+            queryClient.invalidateQueries({ queryKey: getListBudgetsQueryKey() });
+          },
+          onError: () => toast.error("Failed to remove budget"),
+        });
+      }
+      return;
+    }
     if (confirm("Remove this budget?")) {
-      deleteBudget.mutate({ id }, {
+      deleteBudget.mutate({ id: budget.id }, {
         onSuccess: () => {
           toast.success("Budget removed");
           queryClient.invalidateQueries({ queryKey: getListBudgetsQueryKey() });
@@ -305,12 +323,15 @@ export function Budgets() {
       const existing = budgets.find(b => b.categoryId === s.categoryId);
       try {
         await new Promise<void>((resolve, reject) => {
-          if (existing) {
+          if (existing && existing.month.startsWith(activeMonthKey)) {
             updateBudget.mutate(
               { id: existing.id, data: { monthlyLimit: s.monthlyLimit } },
               { onSuccess: () => resolve(), onError: reject }
             );
           } else {
+            // No row for this month (or the effective budget was carried
+            // forward from an earlier month) — create a month-specific row
+            // instead of rewriting history.
             createBudget.mutate(
               { data: { categoryId: s.categoryId, monthlyLimit: s.monthlyLimit, month: activeMonthStr } },
               { onSuccess: () => resolve(), onError: reject }
@@ -330,6 +351,38 @@ export function Budgets() {
 
   const totalSuggested = suggestions?.reduce((sum, s) => sum + s.monthlyLimit, 0) ?? 0;
 
+  // ── AI monthly review ──────────────────────────────────────────────────────
+  type MonthlyReview = { month: string; summary: string; wins: string[]; concerns: string[]; tips: string[] };
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [review, setReview] = useState<MonthlyReview | null>(null);
+
+  const handleMonthlyReview = async () => {
+    setReviewOpen(true);
+    setReviewLoading(true);
+    setReview(null);
+    try {
+      const res = await fetch("/api/ai/monthly-review", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month: activeMonthKey }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? "Request failed");
+      }
+      setReview(await res.json());
+    } catch (e: any) {
+      setReviewOpen(false);
+      toast.error(e?.message === "No transactions found for that month"
+        ? "No spending recorded for this month yet."
+        : "Couldn't generate the review. Try again.");
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -342,6 +395,10 @@ export function Budgets() {
           <p className="text-muted-foreground mt-1">Plan your month, track every dollar.</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleMonthlyReview} className="rounded-full gap-2">
+            <Sparkles className="w-4 h-4 text-secondary" />
+            Monthly Review
+          </Button>
           <Button variant="outline" onClick={() => { setAiOpen(true); setSuggestions(null); }} className="rounded-full gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
             AI Suggest
@@ -489,7 +546,7 @@ export function Budgets() {
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground" onClick={() => openEditModal(budget)}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(budget.id)}>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(budget)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -706,6 +763,56 @@ export function Budgets() {
       </Dialog>
 
       {/* ── AI suggestion modal ── */}
+      {/* ── AI Monthly Review dialog ── */}
+      <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-secondary" />
+              {format(activeMonth, "MMMM yyyy")} Review
+            </DialogTitle>
+            <DialogDescription>How you two did this month, according to AI.</DialogDescription>
+          </DialogHeader>
+          {reviewLoading && (
+            <div className="space-y-3 py-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-4/6" />
+              <p className="text-sm text-muted-foreground pt-2">Analyzing your spending…</p>
+            </div>
+          )}
+          {review && (
+            <div className="space-y-5 py-2">
+              <p className="text-sm leading-relaxed">{review.summary}</p>
+              {review.wins.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-primary">What went well</h4>
+                  <ul className="space-y-1.5 text-sm text-muted-foreground list-disc pl-5">
+                    {review.wins.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                </div>
+              )}
+              {review.concerns.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-destructive">Watch out</h4>
+                  <ul className="space-y-1.5 text-sm text-muted-foreground list-disc pl-5">
+                    {review.concerns.map((c, i) => <li key={i}>{c}</li>)}
+                  </ul>
+                </div>
+              )}
+              {review.tips.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-sm mb-2 text-secondary">Tips for next month</h4>
+                  <ul className="space-y-1.5 text-sm text-muted-foreground list-disc pl-5">
+                    {review.tips.map((t, i) => <li key={i}>{t}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={aiOpen} onOpenChange={(o) => { setAiOpen(o); if (!o) { setSuggestions(null); setIncome(""); } }}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>

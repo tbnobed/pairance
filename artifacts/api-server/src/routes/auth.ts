@@ -159,6 +159,16 @@ router.post("/auth/create-partner", requireAuth, async (req, res): Promise<void>
     return;
   }
 
+  // A household is for a couple — refuse a third member.
+  const householdMembers = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.householdId, currentUser.householdId));
+  if (householdMembers.length >= 2) {
+    res.status(400).json({ error: "Your household already has a partner account" });
+    return;
+  }
+
   const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
   if (existing.length > 0) {
     res.status(400).json({ error: "Email already registered" });
