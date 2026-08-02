@@ -27,6 +27,9 @@ services:
       DATABASE_URL: postgres://couplesbudget:${POSTGRES_PASSWORD:-changeme}@db:5432/couplesbudget
       SESSION_SECRET: ${SESSION_SECRET:-change-this-to-a-random-secret-in-production}
       NODE_ENV: production
+      # OpenAI — point directly at the real API (not Replit's proxy)
+      AI_INTEGRATIONS_OPENAI_BASE_URL: https://api.openai.com/v1
+      AI_INTEGRATIONS_OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
     depends_on:
       db:
         condition: service_healthy
