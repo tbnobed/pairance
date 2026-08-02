@@ -54,6 +54,7 @@ export function Budgets() {
   const [carPayment, setCarPayment] = useState("");
   const [insurance, setInsurance] = useState("");
   const [utilities, setUtilities] = useState("");
+  const [savings, setSavings] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<AISuggestion[] | null>(null);
   const [applying, setApplying] = useState(false);
@@ -126,6 +127,7 @@ export function Budgets() {
         ...(carPayment ? { carPayment: parseFloat(carPayment) } : {}),
         ...(insurance ? { insurance: parseFloat(insurance) } : {}),
         ...(utilities ? { utilities: parseFloat(utilities) } : {}),
+        ...(savings ? { savings: parseFloat(savings) } : {}),
       }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -352,6 +354,7 @@ export function Budgets() {
                   { label: "Car Payment(s)", value: carPayment, setter: setCarPayment, placeholder: "e.g. 500" },
                   { label: "Insurance", value: insurance, setter: setInsurance, placeholder: "e.g. 300" },
                   { label: "Utilities", value: utilities, setter: setUtilities, placeholder: "e.g. 200" },
+                  { label: "Desired Savings", value: savings, setter: setSavings, placeholder: "e.g. 1000" },
                 ].map(({ label, value, setter, placeholder }) => (
                   <div key={label}>
                     <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
@@ -363,14 +366,14 @@ export function Budgets() {
                   </div>
                 ))}
               </div>
-              {income && (rent || carPayment || insurance || utilities) && (() => {
-                const fixed = [rent, carPayment, insurance, utilities].reduce((s, v) => s + (parseFloat(v) || 0), 0);
+              {income && (rent || carPayment || insurance || utilities || savings) && (() => {
+                const fixed = [rent, carPayment, insurance, utilities, savings].reduce((s, v) => s + (parseFloat(v) || 0), 0);
                 const left = parseFloat(income) - fixed;
                 return (
                   <div className="flex justify-between text-xs pt-1 border-t border-border">
-                    <span className="text-muted-foreground">Fixed: {formatCurrency(fixed)}</span>
+                    <span className="text-muted-foreground">Reserved: {formatCurrency(fixed)}</span>
                     <span className={left < 0 ? "text-destructive font-medium" : "text-primary font-medium"}>
-                      Discretionary: {formatCurrency(Math.max(0, left))}
+                      For spending: {formatCurrency(Math.max(0, left))}
                     </span>
                   </div>
                 );
