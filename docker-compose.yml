@@ -1,38 +1,47 @@
-version: "3.9"
-
 services:
   db:
-    image: postgres:16-alpine
-    restart: unless-stopped
+    image: postgres:16
     environment:
-      POSTGRES_DB: couplesbudget
-      POSTGRES_USER: couplesbudget
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_USER: pairance
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: pairance
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - pgdata:/var/lib/postgresql/data
+      # Creates the full schema (incl. user_sessions + plaid tables) on first boot
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U couplesbudget"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U pairance -d pairance"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  app:
-    build: .
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
+  api:
+    build:
+      context: .
+      dockerfile: artifacts/api-server/Dockerfile
     environment:
-      DATABASE_URL: postgres://couplesbudget:${POSTGRES_PASSWORD:-changeme}@db:5432/couplesbudget
-      SESSION_SECRET: ${SESSION_SECRET:-change-this-to-a-random-secret-in-production}
+      DATABASE_URL: postgres://pairance:${POSTGRES_PASSWORD}@db:5432/pairance
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      PLAID_CLIENT_ID: ${PLAID_CLIENT_ID:?set PLAID_CLIENT_ID in .env}
+      PLAID_SECRET: ${PLAID_SECRET:?set PLAID_SECRET in .env}
+      PLAID_ENV: ${PLAID_ENV:-sandbox}
+      # Only needed if you use the AI budget suggestions feature outside Replit:
+      AI_INTEGRATIONS_OPENAI_API_KEY: ${AI_INTEGRATIONS_OPENAI_API_KEY:-}
+      AI_INTEGRATIONS_OPENAI_BASE_URL: ${AI_INTEGRATIONS_OPENAI_BASE_URL:-}
       NODE_ENV: production
-      # OpenAI — point directly at the real API (not Replit's proxy)
-      AI_INTEGRATIONS_OPENAI_BASE_URL: https://api.openai.com/v1
-      AI_INTEGRATIONS_OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      PORT: 8080
     depends_on:
       db:
         condition: service_healthy
 
+  web:
+    build:
+      context: .
+      dockerfile: artifacts/budget-tracker/Dockerfile
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    depends_on:
+      - api
+
 volumes:
-  postgres_data:
+  pgdata:
