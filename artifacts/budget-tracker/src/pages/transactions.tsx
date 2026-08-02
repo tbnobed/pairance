@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/date";
 import { 
   MapPin, 
   Trash2, 
@@ -123,7 +124,7 @@ export function Transactions() {
                       <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                         <span className="font-medium text-foreground/70">{tx.userName}</span>
                         <span>•</span>
-                        <span>{format(new Date(tx.date), 'MMMM d, yyyy')}</span>
+                        <span>{format(parseLocalDate(tx.date), 'MMMM d, yyyy')}</span>
                         {tx.locationName && (
                           <>
                             <span>•</span>

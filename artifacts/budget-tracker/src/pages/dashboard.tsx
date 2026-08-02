@@ -7,6 +7,7 @@ import {
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/date";
 import { 
   BarChart, 
   Bar, 
@@ -120,7 +121,7 @@ export function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis 
                       dataKey="date" 
-                      tickFormatter={(val) => format(new Date(val), 'MMM d')} 
+                      tickFormatter={(val) => format(parseLocalDate(val), 'MMM d')} 
                       axisLine={false}
                       tickLine={false}
                       tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
@@ -138,7 +139,7 @@ export function Dashboard() {
                         if (active && payload && payload.length) {
                           return (
                             <div className="bg-popover border border-border shadow-lg p-3 rounded-lg">
-                              <p className="text-sm text-muted-foreground mb-1">{format(new Date(label), 'MMMM d, yyyy')}</p>
+                              <p className="text-sm text-muted-foreground mb-1">{format(parseLocalDate(label), 'MMMM d, yyyy')}</p>
                               <p className="font-medium text-foreground">{formatCurrency(payload[0].value as number)}</p>
                             </div>
                           );
@@ -216,7 +217,7 @@ export function Dashboard() {
                     <div className="text-xs text-muted-foreground flex gap-2">
                       <span>{tx.userName}</span>
                       <span>•</span>
-                      <span>{format(new Date(tx.date), 'MMM d, yyyy')}</span>
+                      <span>{format(parseLocalDate(tx.date), 'MMM d, yyyy')}</span>
                       {tx.locationName && (
                         <>
                           <span>•</span>

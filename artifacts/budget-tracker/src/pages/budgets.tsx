@@ -20,7 +20,6 @@ import {
   subMonths,
   getDaysInMonth,
   getDate,
-  parseISO,
 } from "date-fns";
 import {
   Plus, Edit2, Trash2, Sparkles, Loader2, Check,
@@ -41,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { parseLocalDate } from "@/lib/date";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -603,7 +603,7 @@ export function Budgets() {
                         <div key={t.id} className="flex justify-between items-center text-sm">
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="text-muted-foreground text-xs shrink-0">
-                              {format(parseISO(t.date), "MMM d")}
+                              {format(parseLocalDate(t.date), "MMM d")}
                             </span>
                             <span className="truncate text-foreground">{t.description}</span>
                           </div>

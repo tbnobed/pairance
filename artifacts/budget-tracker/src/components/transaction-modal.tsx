@@ -20,6 +20,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { parseLocalDate } from "@/lib/date";
 
 const transactionSchema = z.object({
   amount: z.coerce.number().positive("Amount must be positive"),
@@ -50,7 +51,7 @@ export function TransactionModal({ isOpen, onClose, transaction, initialData }: 
       amount: transaction?.amount ?? initialData?.amount ?? 0,
       description: transaction?.description ?? initialData?.description ?? "",
       categoryId: transaction?.categoryId ?? initialData?.categoryId ?? 0,
-      date: transaction?.date ? format(new Date(transaction.date), 'yyyy-MM-dd') : initialData?.date ?? format(new Date(), 'yyyy-MM-dd'),
+      date: transaction?.date ? format(parseLocalDate(transaction.date), 'yyyy-MM-dd') : initialData?.date ?? format(new Date(), 'yyyy-MM-dd'),
       locationName: transaction?.locationName ?? initialData?.locationName ?? null,
       locationLat: transaction?.locationLat ?? initialData?.locationLat ?? null,
       locationLng: transaction?.locationLng ?? initialData?.locationLng ?? null,
@@ -64,7 +65,7 @@ export function TransactionModal({ isOpen, onClose, transaction, initialData }: 
         amount: transaction?.amount ?? initialData?.amount ?? 0,
         description: transaction?.description ?? initialData?.description ?? "",
         categoryId: transaction?.categoryId ?? initialData?.categoryId ?? 0,
-        date: transaction?.date ? format(new Date(transaction.date), 'yyyy-MM-dd') : initialData?.date ?? format(new Date(), 'yyyy-MM-dd'),
+        date: transaction?.date ? format(parseLocalDate(transaction.date), 'yyyy-MM-dd') : initialData?.date ?? format(new Date(), 'yyyy-MM-dd'),
         locationName: transaction?.locationName ?? initialData?.locationName ?? null,
         locationLat: transaction?.locationLat ?? initialData?.locationLat ?? null,
         locationLng: transaction?.locationLng ?? initialData?.locationLng ?? null,
