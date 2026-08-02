@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, json } from "express";
 import { requireAuth } from "../middlewares/requireAuth";
 import { db, categoriesTable, transactionsTable, budgetsTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
@@ -218,6 +218,94 @@ router.post("/ai/monthly-review", requireAuth, async (req, res) => {
       wins: Array.isArray(parsed.wins) ? parsed.wins.map(String) : [],
       concerns: Array.isArray(parsed.concerns) ? parsed.concerns.map(String) : [],
       tips: Array.isArray(parsed.tips) ? parsed.tips.map(String) : [],
+    });
+  } catch {
+    res.status(500).json({ error: "AI returned an unparseable response" });
+  }
+});
+
+// Scan a receipt photo: extract amount/merchant/date and pick a category.
+// Route-level body limit because the image arrives as base64 JSON.
+router.post("/ai/scan-receipt", json({ limit: "10mb" }), requireAuth, async (req, res) => {
+  const imageBase64 = typeof req.body?.imageBase64 === "string" ? req.body.imageBase64 : null;
+  if (!imageBase64 || imageBase64.length < 100) {
+    res.status(400).json({ error: "imageBase64 is required" });
+    return;
+  }
+  if (imageBase64.length > 8_000_000) {
+    res.status(400).json({ error: "Image too large" });
+    return;
+  }
+  const householdId = (req as any).householdId;
+
+  const categories = await db
+    .select({ id: categoriesTable.id, name: categoriesTable.name })
+    .from(categoriesTable)
+    .where(eq(categoriesTable.householdId, householdId));
+  if (categories.length === 0) {
+    res.status(400).json({ error: "No categories found for this household" });
+    return;
+  }
+  const categoryList = categories.map((c) => `- ${c.name} (id: ${c.id})`).join("\n");
+
+  const dataUrl = imageBase64.startsWith("data:")
+    ? imageBase64
+    : `data:image/jpeg;base64,${imageBase64}`;
+
+  let completion;
+  try {
+    completion = await openai.chat.completions.create({
+      model: "gpt-5.6-luna",
+      max_completion_tokens: 500,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You read receipt photos and extract transaction data. " +
+            "Respond ONLY with valid JSON, no markdown: " +
+            '{"description": "merchant name", "amount": 12.34, "date": "YYYY-MM-DD", "categoryId": 1}. ' +
+            "amount is the receipt total. If the date is unreadable, use null. " +
+            "Pick the categoryId that best fits the merchant/items from the provided list. " +
+            'If the image is not a receipt, respond {"error": "not a receipt"}.',
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: `Our spending categories:\n${categoryList}\n\nExtract this receipt:` },
+            { type: "image_url", image_url: { url: dataUrl } },
+          ],
+        },
+      ],
+    });
+  } catch {
+    res.status(502).json({ error: "AI service is unavailable right now. Try again shortly." });
+    return;
+  }
+
+  const raw = completion.choices[0]?.message?.content?.trim() ?? "";
+  try {
+    const parsed = JSON.parse(raw.replace(/^```json?\s*|\s*```$/g, ""));
+    if (parsed.error) {
+      res.status(422).json({ error: "That doesn't look like a receipt." });
+      return;
+    }
+    const amount = Number(parsed.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      res.status(422).json({ error: "Couldn't read the total on the receipt." });
+      return;
+    }
+    const categoryId = categories.some((c) => c.id === Number(parsed.categoryId))
+      ? Number(parsed.categoryId)
+      : categories[0].id;
+    const date = typeof parsed.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date)
+      ? parsed.date
+      : null;
+    res.json({
+      description: String(parsed.description ?? "Receipt"),
+      amount,
+      date,
+      categoryId,
+      categoryName: categories.find((c) => c.id === categoryId)?.name ?? null,
     });
   } catch {
     res.status(500).json({ error: "AI returned an unparseable response" });

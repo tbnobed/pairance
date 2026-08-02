@@ -12,11 +12,14 @@ import {
   MapPin,
   Plus,
   Sun,
-  Moon
+  Moon,
+  Camera,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TransactionModal } from "@/components/transaction-modal";
+import { toast } from "sonner";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -54,6 +57,56 @@ export function Layout({ children }: LayoutProps) {
   };
   const [isTransactionModalOpen, setIsTransactionModalOpen] = React.useState(false);
   const [txInitialData, setTxInitialData] = React.useState<any>(null);
+  const [scanning, setScanning] = React.useState(false);
+  const receiptInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Downscale the photo client-side so uploads stay small and fast.
+  const fileToJpegDataUrl = (file: File, maxDim = 1600): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Couldn't read image")); };
+      img.src = url;
+    });
+
+  const handleReceiptFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    setScanning(true);
+    try {
+      const dataUrl = await fileToJpegDataUrl(file);
+      const res = await fetch("/api/ai/scan-receipt", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: dataUrl }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Scan failed");
+      setTxInitialData({
+        amount: body.amount,
+        description: body.description,
+        categoryId: body.categoryId,
+        ...(body.date ? { date: body.date } : {}),
+      });
+      setIsTransactionModalOpen(true);
+      toast.success(`Read receipt: ${body.description} — filed under ${body.categoryName ?? "a category"}. Review and save.`);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Couldn't scan the receipt. Try a clearer photo.");
+    } finally {
+      setScanning(false);
+    }
+  };
 
   React.useEffect(() => {
     if (!isLoading && isError) {
@@ -232,6 +285,16 @@ export function Layout({ children }: LayoutProps) {
         >
           <MapPin className="w-5 h-5" />
         </Button>
+        <Button
+          size="icon"
+          variant="secondary"
+          className="w-12 h-12 rounded-full shadow-md hover:shadow-lg transition-all text-secondary-foreground"
+          onClick={() => receiptInputRef.current?.click()}
+          disabled={scanning}
+          title="Scan Receipt"
+        >
+          {scanning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
+        </Button>
         <Button 
           size="icon" 
           className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all"
@@ -243,6 +306,15 @@ export function Layout({ children }: LayoutProps) {
           <Plus className="w-6 h-6" />
         </Button>
       </div>
+
+      <input
+        ref={receiptInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleReceiptFile}
+      />
 
       {isTransactionModalOpen && (
         <TransactionModal 

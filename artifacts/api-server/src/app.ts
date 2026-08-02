@@ -65,7 +65,8 @@ app.use(
   }),
 );
 
-app.use(express.json());
+// 10mb limit to allow base64 receipt photos on /ai/scan-receipt
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
