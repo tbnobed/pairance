@@ -62,6 +62,8 @@ const defaultPlan: MonthlyPlan = {
 };
 
 function usePlan() {
+  // localStorage is only an instant-load cache; the household's plan lives on
+  // the server so it's shared between partners and across devices.
   const [plan, setPlanState] = useState<MonthlyPlan>(() => {
     try {
       const stored = localStorage.getItem(PLAN_KEY);
@@ -69,9 +71,28 @@ function usePlan() {
     } catch { return defaultPlan; }
   });
 
+  useEffect(() => {
+    fetch("/api/plan", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        if (body?.plan) {
+          const next = { ...defaultPlan, ...body.plan };
+          setPlanState(next);
+          localStorage.setItem(PLAN_KEY, JSON.stringify(next));
+        }
+      })
+      .catch(() => { /* offline — keep cached copy */ });
+  }, []);
+
   const savePlan = (next: MonthlyPlan) => {
     setPlanState(next);
     localStorage.setItem(PLAN_KEY, JSON.stringify(next));
+    fetch("/api/plan", {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: next }),
+    }).catch(() => toast.error("Couldn't sync your plan to the server"));
   };
 
   return { plan, savePlan };
