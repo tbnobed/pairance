@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -77,55 +77,59 @@
   --elevate-1: rgba(0, 0, 0, 0.03);
   --elevate-2: rgba(0, 0, 0, 0.08);
 
-  --background: 41 45% 96%;
-  --foreground: 26 33% 18%;
+  /* Pairance brand tokens */
+  --background: 40 33% 95%;        /* Soft Cream #F6F3EE */
+  --foreground: 220 38% 15%;       /* Midnight Navy #182235 */
 
-  --border: 36 25% 85%;
-  --input: 36 25% 85%;
-  --ring: 14 65% 55%;
+  --border: 40 7% 88%;             /* Line #E4E2DF */
+  --input: 40 7% 88%;
+  --ring: 159 55% 62%;             /* Mint Leaf */
 
-  --card: 0 0% 100%;
-  --card-foreground: 26 33% 18%;
-  --card-border: 36 25% 90%;
+  --card: 0 0% 100%;               /* White surface */
+  --card-foreground: 220 38% 15%;
+  --card-border: 40 10% 91%;
 
-  --sidebar: 41 45% 94%;
-  --sidebar-foreground: 26 33% 18%;
-  --sidebar-border: 36 25% 85%;
-  --sidebar-primary: 14 65% 55%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 36 25% 90%;
-  --sidebar-accent-foreground: 26 33% 18%;
-  --sidebar-ring: 14 65% 55%;
+  /* Sidebar — Midnight Navy dark */
+  --sidebar: 220 38% 15%;          /* #182235 */
+  --sidebar-foreground: 40 33% 95%; /* Cream */
+  --sidebar-border: 221 36% 19%;   /* navyRaised #1E2A40 */
+  --sidebar-primary: 159 55% 62%;  /* Mint */
+  --sidebar-primary-foreground: 220 38% 15%;
+  --sidebar-accent: 221 36% 19%;   /* navyRaised */
+  --sidebar-accent-foreground: 40 33% 95%;
+  --sidebar-ring: 159 55% 62%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 26 33% 18%;
-  --popover-border: 36 25% 90%;
+  --popover-foreground: 220 38% 15%;
+  --popover-border: 40 10% 91%;
 
-  --primary: 14 65% 55%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 159 55% 62%;          /* Mint Leaf #69D3B0 */
+  --primary-foreground: 220 38% 15%; /* Navy on Mint */
 
-  --secondary: 120 15% 65%;
-  --secondary-foreground: 26 33% 18%;
+  --secondary: 177 56% 42%;        /* Teal Current #2FA7A0 */
+  --secondary-foreground: 220 38% 15%;
 
-  --muted: 36 25% 90%;
-  --muted-foreground: 26 20% 50%;
+  --muted: 40 24% 92%;             /* surfaceSunk #EFEBE4 */
+  --muted-foreground: 218 11% 40%; /* slateDeep #5B6472 */
 
-  --accent: 36 25% 90%;
-  --accent-foreground: 26 33% 18%;
+  --accent: 40 24% 92%;
+  --accent-foreground: 220 38% 15%;
 
-  --destructive: 5 70% 50%;
-  --destructive-foreground: 0 0% 100%;
+  --destructive: 8 100% 74%;       /* Warm Coral #FF8C7A */
+  --destructive-foreground: 220 38% 15%;
 
-  --chart-1: 14 65% 55%;
-  --chart-2: 120 15% 65%;
-  --chart-3: 35 75% 60%;
-  --chart-4: 280 40% 60%;
-  --chart-5: 200 30% 60%;
+  /* Charts: mint · teal · coral · slate · navy */
+  --chart-1: 159 55% 62%;
+  --chart-2: 177 56% 42%;
+  --chart-3: 8 100% 74%;
+  --chart-4: 220 9% 46%;
+  --chart-5: 220 38% 15%;
 
-  --app-font-sans: 'Outfit', sans-serif;
-  --app-font-serif: 'Fraunces', serif;
-  --app-font-mono: Menlo, monospace;
-  --radius: 1rem;
+  /* Outfit = display/headings/amounts  |  Inter = body */
+  --app-font-sans: 'Inter', system-ui, sans-serif;
+  --app-font-serif: 'Outfit', sans-serif;
+  --app-font-mono: 'JetBrains Mono', Menlo, monospace;
+  --radius: 0.875rem;              /* 14px — brand md radius */
   
   --shadow-2xs: 0px 2px 0px 0px rgba(44, 30, 22, 0.05);
   --shadow-xs: 0px 4px 10px 0px rgba(44, 30, 22, 0.05);

@@ -100,19 +100,19 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen flex bg-background w-full">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col fixed inset-y-0 left-0 z-10">
-        <div className="p-6">
-          <h1 className="text-2xl font-serif text-primary tracking-tight">CouplesBudget</h1>
+      <aside className="hidden md:flex w-64 border-r border-sidebar-border bg-sidebar flex-col fixed inset-y-0 left-0 z-10">
+        <div className="px-6 py-5">
+          <img src="/logo-reversed.svg" alt="Pairance" className="h-7 w-auto" />
         </div>
-        
-        <nav className="flex-1 px-4 space-y-2">
+
+        <nav className="flex-1 px-4 space-y-1">
           {navItems.map((item) => {
             const isActive = location === item.href;
             return (
-              <Link key={item.name} href={item.href} className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all cursor-pointer block ${
-                  isActive 
-                    ? "bg-primary/10 text-primary font-medium" 
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              <Link key={item.name} href={item.href} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer block ${
+                  isActive
+                    ? "bg-sidebar-primary/20 text-sidebar-primary font-semibold"
+                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 }`}>
                 <item.icon className="w-5 h-5" />
                 <span>{item.name}</span>
@@ -121,29 +121,29 @@ export function Layout({ children }: LayoutProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-border">
-          <Link href="/settings" className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all cursor-pointer block mb-2 ${
-              location === "/settings" 
-                ? "bg-primary/10 text-primary font-medium" 
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+        <div className="p-4 border-t border-sidebar-border">
+          <Link href="/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer block mb-2 ${
+              location === "/settings"
+                ? "bg-sidebar-primary/20 text-sidebar-primary font-semibold"
+                : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
             }`}>
             <Settings className="w-5 h-5" />
             <span>Settings</span>
           </Link>
 
-          <div className="flex items-center justify-between px-4 py-2 mt-4">
+          <div className="flex items-center justify-between px-4 py-2 mt-2">
             <div className="flex items-center gap-3 overflow-hidden">
-              <Avatar className="w-10 h-10 border border-border shrink-0">
-                <AvatarFallback className="bg-primary/20 text-primary font-medium">
+              <Avatar className="w-9 h-9 border border-sidebar-border shrink-0">
+                <AvatarFallback className="bg-sidebar-primary/20 text-sidebar-primary font-semibold text-sm">
                   {user?.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col overflow-hidden">
-                <span className="text-sm font-medium leading-none mb-1 truncate">{user?.name}</span>
-                <span className="text-xs text-muted-foreground leading-none truncate">{user?.spouseName ? `& ${user.spouseName}` : "Solo"}</span>
+                <span className="text-sm font-semibold text-sidebar-foreground leading-none mb-1 truncate">{user?.name}</span>
+                <span className="text-xs text-sidebar-foreground/50 leading-none truncate">{user?.spouseName ? `& ${user.spouseName}` : "Solo"}</span>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground hover:text-destructive shrink-0">
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-sidebar-foreground/40 hover:text-destructive shrink-0">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>

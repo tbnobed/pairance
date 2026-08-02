@@ -1,0 +1,77 @@
+/* Pairance — design tokens v1.0
+   Better money, together. */
+
+:root {
+  /* ---- Core palette ------------------------------------------------ */
+  --pr-navy:        #182235; /* Midnight Navy  — primary text, dark surfaces */
+  --pr-mint:        #69D3B0; /* Mint Leaf      — primary action, positive    */
+  --pr-teal:        #2FA7A0; /* Teal Current   — the overlap, secondary      */
+  --pr-coral:       #FF8C7A; /* Warm Coral     — attention, over budget      */
+  --pr-cream:       #F6F3EE; /* Soft Cream     — page background            */
+  --pr-slate:       #6B7280; /* Slate Gray     — borders, disabled          */
+
+  /* ---- Accessible text shades (>= 4.5:1 on cream) ------------------- */
+  --pr-teal-deep:   #1F6F6B; /* teal used as text or a link      5.35:1 */
+  --pr-slate-deep:  #5B6472; /* secondary body text              5.40:1 */
+  --pr-coral-deep:  #B4442F; /* error text on light              4.98:1 */
+
+
+  /* ---- Ledger semantics ---------------------------------------------
+     Every amount on screen uses exactly one of these five. Nothing else. */
+  --pr-money-in:      #69D3B0;  --pr-money-in-text:      #1F6F6B;
+  --pr-money-out:     #182235;  --pr-money-out-text:     #182235;
+  --pr-money-shared:  #2FA7A0;  --pr-money-shared-text:  #1F6F6B;
+  --pr-money-pending: #6B7280;  --pr-money-pending-text: #5B6472;
+  --pr-money-over:    #FF8C7A;  --pr-money-over-text:    #B4442F;
+
+  /* ---- Numerals ------------------------------------------------------
+     Money is always tabular. Currency symbol and cents are raised. */
+  --pr-cur-size:   .58em;  --pr-cur-rise:   .46em;
+  --pr-cents-size: .56em;  --pr-cents-rise: .58em;
+
+  /* ---- Surfaces ----------------------------------------------------- */
+  --pr-surface:       #FFFFFF;
+  --pr-surface-sunk:  #EFEBE4;
+  --pr-navy-raised:   #1E2A40;
+  --pr-mint-tint:     #DAEDE2;
+  --pr-coral-tint:    #F7E5DE;
+  --pr-line:          #E4E2DF;
+  --pr-line-strong:   #D7D6D4;
+
+  /* ---- Type --------------------------------------------------------- */
+  --pr-font-display: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --pr-font-body:    "Inter", system-ui, -apple-system, sans-serif;
+
+  --pr-size-display: 3.25rem;  /* 52px  / 600 / -0.02em */
+  --pr-size-h1:      2.25rem;  /* 36px  / 600 / -0.02em */
+  --pr-size-h2:      1.5rem;   /* 24px  / 600 / -0.01em */
+  --pr-size-h3:      1.125rem; /* 18px  / 600           */
+  --pr-size-body:    1rem;     /* 16px  / 400 / 1.6     */
+  --pr-size-small:   0.875rem; /* 14px  / 400 / 1.5     */
+  --pr-size-label:   0.75rem;  /* 12px  / 600 / 0.09em uppercase */
+  --pr-size-amount:  2.5rem;   /* 40px  / 600 / tabular-nums     */
+
+  /* ---- Shape & depth ------------------------------------------------ */
+  --pr-radius-sm:  8px;
+  --pr-radius-md:  14px;
+  --pr-radius-lg:  20px;
+  --pr-radius-pill: 999px;
+
+  --pr-shadow-card:  0 1px 2px rgba(24,34,53,.05), 0 8px 24px rgba(24,34,53,.06);
+  --pr-shadow-lift:  0 2px 4px rgba(24,34,53,.06), 0 16px 40px rgba(24,34,53,.10);
+
+  /* ---- Space (4px base) --------------------------------------------- */
+  --pr-space-1: 4px;  --pr-space-2: 8px;  --pr-space-3: 12px;
+  --pr-space-4: 16px; --pr-space-5: 24px; --pr-space-6: 32px;
+  --pr-space-7: 48px; --pr-space-8: 64px; --pr-space-9: 96px;
+
+  /* ---- Motion -------------------------------------------------------- */
+  --pr-ease:      cubic-bezier(.22,.68,.34,1);
+  --pr-dur-fast:  140ms;
+  --pr-dur-base:  260ms;
+  --pr-dur-slow:  520ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --pr-dur-fast: 0ms; --pr-dur-base: 0ms; --pr-dur-slow: 0ms; }
+}

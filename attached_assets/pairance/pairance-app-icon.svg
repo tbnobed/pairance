@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512.0 512.0" width="512" height="512" role="img" aria-label="Pairance app icon">
+<title>Pairance app icon</title>
+<rect width="512.0" height="512.0" rx="114.53" fill="#182235"/><g transform="translate(256.0 256.0) scale(1.2126)"><defs><clipPath id="lens-i"><circle cx="-52.0" cy="0" r="100.0"/></clipPath></defs><circle cx="-52.0" cy="0" r="100.0" fill="#F6F3EE"/><circle cx="52.0" cy="0" r="100.0" fill="#69D3B0"/><g clip-path="url(#lens-i)"><circle cx="52.0" cy="0" r="100.0" fill="#2FA7A0"/></g><g transform="translate(-47.500 -46.600) scale(0.95000)"><path d="M 50 88 C 20 66, 6 48, 6 33 C 6 18, 18 8, 31 8 C 39 8, 46 12, 50 18 C 54 12, 61 8, 69 8 C 82 8, 94 18, 94 33 C 94 48, 80 66, 50 88 Z" fill="#182235"/></g></g>
+</svg>

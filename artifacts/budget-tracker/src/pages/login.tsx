@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -52,9 +51,8 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <Link href="/" className="mb-8 flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
-        <Heart className="w-8 h-8 fill-current" />
-        <span className="font-serif text-2xl font-medium tracking-tight">CouplesBudget</span>
+      <Link href="/" className="mb-8 block hover:opacity-80 transition-opacity">
+        <img src="/logo-horizontal.svg" alt="Pairance" className="h-10 w-auto" />
       </Link>
       
       <Card className="w-full max-w-md shadow-xl border-none">
