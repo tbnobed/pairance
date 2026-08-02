@@ -186,8 +186,8 @@
   --background: 0 0% 4%;
   --foreground: 40 33% 95%;
 
-  --border: 0 0% 24%;
-  --input: 0 0% 30%;
+  --border: 0 0% 32%;
+  --input: 0 0% 45%;
   --ring: 159 55% 62%;
 
   --card: 0 0% 9%;
@@ -204,9 +204,9 @@
   --sidebar-accent-foreground: 40 33% 95%;
   --sidebar-ring: 159 55% 62%;
 
-  --popover: 0 0% 11%;
+  --popover: 0 0% 14%;
   --popover-foreground: 40 33% 95%;
-  --popover-border: 0 0% 22%;
+  --popover-border: 0 0% 32%;
 
   --primary: 159 55% 62%;          /* Mint Leaf */
   --primary-foreground: 220 38% 15%;
@@ -214,8 +214,8 @@
   --secondary: 177 56% 42%;        /* Teal Current */
   --secondary-foreground: 40 33% 95%;
 
-  --muted: 0 0% 16%;
-  --muted-foreground: 220 9% 72%;
+  --muted: 0 0% 20%;
+  --muted-foreground: 220 9% 80%;
 
   --accent: 0 0% 12%;
   --accent-foreground: 40 33% 95%;
