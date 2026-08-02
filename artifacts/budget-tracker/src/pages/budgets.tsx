@@ -110,13 +110,30 @@ export function Budgets() {
   const updateBudget = useUpdateBudget();
   const deleteBudget = useDeleteBudget();
 
-  // Filter budgets to active month
-  const budgets = allBudgets?.filter(b => b.month.startsWith(activeMonthKey)) ?? [];
-
   // Filter transactions to active month
   const monthTransactions = (allTransactions ?? []).filter(
     t => t.date.startsWith(activeMonthKey)
   );
+
+  // Budgets carry forward: for each category, use the budget set in this
+  // month if there is one, otherwise the most recent earlier month's budget.
+  const budgets = React.useMemo(() => {
+    const byCategory = new Map<number, (typeof allBudgets extends (infer T)[] | undefined ? T : never)>();
+    for (const b of allBudgets ?? []) {
+      const bKey = b.month.slice(0, 7);
+      if (bKey > activeMonthKey) continue; // set in a future month — ignore
+      const cur = byCategory.get(b.categoryId);
+      if (!cur || bKey > cur.month.slice(0, 7)) byCategory.set(b.categoryId, b);
+    }
+    // Spent must be recomputed for the month being viewed (the server's
+    // "spent" belongs to the month the budget row was created in).
+    return Array.from(byCategory.values()).map((b) => ({
+      ...b,
+      spent: monthTransactions
+        .filter((t) => t.categoryId === b.categoryId)
+        .reduce((s, t) => s + t.amount, 0),
+    }));
+  }, [allBudgets, activeMonthKey, monthTransactions]);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -214,6 +231,19 @@ export function Budgets() {
   };
 
   const onSubmit = (values: z.infer<typeof budgetSchema>) => {
+    // Editing a budget that was carried forward from an earlier month:
+    // create an override for the month being viewed instead of rewriting history.
+    if (editingBudget && !editingBudget.month.startsWith(activeMonthKey)) {
+      createBudget.mutate({ data: { categoryId: editingBudget.categoryId, monthlyLimit: values.monthlyLimit, month: activeMonthStr } }, {
+        onSuccess: () => {
+          toast.success("Budget updated for this month");
+          queryClient.invalidateQueries({ queryKey: getListBudgetsQueryKey() });
+          setIsModalOpen(false);
+        },
+        onError: () => toast.error("Failed to update budget"),
+      });
+      return;
+    }
     if (editingBudget) {
       updateBudget.mutate({ id: editingBudget.id, data: { monthlyLimit: values.monthlyLimit } }, {
         onSuccess: () => {
