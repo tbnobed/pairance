@@ -38,6 +38,7 @@ export const RegisterResponse = zod.object({
   "email": zod.string(),
   "householdId": zod.number().nullable(),
   "spouseName": zod.string().nullish(),
+  "theme": zod.enum(['light', 'dark']).optional(),
   "createdAt": zod.string()
 })
 })
@@ -58,6 +59,7 @@ export const LoginResponse = zod.object({
   "email": zod.string(),
   "householdId": zod.number().nullable(),
   "spouseName": zod.string().nullish(),
+  "theme": zod.enum(['light', 'dark']).optional(),
   "createdAt": zod.string()
 })
 })
@@ -78,6 +80,25 @@ export const GetMeResponse = zod.object({
   "email": zod.string(),
   "householdId": zod.number().nullable(),
   "spouseName": zod.string().nullish(),
+  "theme": zod.enum(['light', 'dark']).optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Save the user's theme preference
+ */
+export const UpdateThemeBody = zod.object({
+  "theme": zod.enum(['light', 'dark'])
+})
+
+export const UpdateThemeResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "householdId": zod.number().nullable(),
+  "spouseName": zod.string().nullish(),
+  "theme": zod.enum(['light', 'dark']).optional(),
   "createdAt": zod.string()
 })
 
@@ -103,6 +124,7 @@ export const CreatePartnerResponse = zod.object({
   "email": zod.string(),
   "householdId": zod.number().nullable(),
   "spouseName": zod.string().nullish(),
+  "theme": zod.enum(['light', 'dark']).optional(),
   "createdAt": zod.string()
 })
 
@@ -120,6 +142,7 @@ export const InviteSpouseResponse = zod.object({
   "email": zod.string(),
   "householdId": zod.number().nullable(),
   "spouseName": zod.string().nullish(),
+  "theme": zod.enum(['light', 'dark']).optional(),
   "createdAt": zod.string()
 })
 

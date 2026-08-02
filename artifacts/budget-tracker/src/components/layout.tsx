@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { useGetMe, useLogout, useLocationCheckIn } from "@workspace/api-client-react";
+import { useGetMe, useLogout, useLocationCheckIn, useUpdateTheme, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
   LayoutDashboard, 
@@ -10,7 +10,9 @@ import {
   Settings, 
   LogOut,
   MapPin,
-  Plus
+  Plus,
+  Sun,
+  Moon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,6 +28,30 @@ export function Layout({ children }: LayoutProps) {
   const logout = useLogout();
   const queryClient = useQueryClient();
   const checkIn = useLocationCheckIn();
+  const updateTheme = useUpdateTheme();
+
+  // Keep the page + local cache in sync with the theme saved on the account.
+  const theme = (user as any)?.theme ?? "light";
+  React.useEffect(() => {
+    if (!user) return;
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [user, theme]);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    // Apply instantly, then persist to the account.
+    document.documentElement.classList.toggle("dark", next === "dark");
+    localStorage.setItem("theme", next);
+    updateTheme.mutate(
+      { data: { theme: next } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        },
+      }
+    );
+  };
   const [isTransactionModalOpen, setIsTransactionModalOpen] = React.useState(false);
   const [txInitialData, setTxInitialData] = React.useState<any>(null);
 
@@ -148,9 +174,14 @@ export function Layout({ children }: LayoutProps) {
                 <span className="text-xs text-sidebar-foreground/50 leading-none truncate">{user?.spouseName ? `& ${user.spouseName}` : "Solo"}</span>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="text-sidebar-foreground/40 hover:text-destructive shrink-0">
-              <LogOut className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center shrink-0">
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-sidebar-foreground/40 hover:text-sidebar-foreground" title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="text-sidebar-foreground/40 hover:text-destructive">
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </aside>

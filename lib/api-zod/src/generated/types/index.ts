@@ -35,4 +35,7 @@ export * from './registerInput';
 export * from './transaction';
 export * from './transactionInput';
 export * from './transactionUpdate';
+export * from './updateThemeInput';
+export * from './updateThemeInputTheme';
 export * from './user';
+export * from './userTheme';

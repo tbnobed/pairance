@@ -45,6 +45,7 @@ import type {
   Transaction,
   TransactionInput,
   TransactionUpdate,
+  UpdateThemeInput,
   User
 } from './api.schemas';
 
@@ -441,6 +442,77 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
+
+export const getUpdateThemeUrl = () => {
+
+
+
+
+  return `/api/auth/theme`
+}
+
+/**
+ * @summary Save the user's theme preference
+ */
+export const updateTheme = async (updateThemeInput: UpdateThemeInput, options?: Parameters<typeof customFetch>[1]): Promise<User> => {
+
+  return customFetch<User>(getUpdateThemeUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateThemeInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateThemeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTheme>>, TError,{data: BodyType<UpdateThemeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTheme>>, TError,{data: BodyType<UpdateThemeInput>}, TContext> => {
+
+const mutationKey = ['updateTheme'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTheme>>, {data: BodyType<UpdateThemeInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateTheme(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateThemeMutationResult = NonNullable<Awaited<ReturnType<typeof updateTheme>>>
+    export type UpdateThemeMutationBody = BodyType<UpdateThemeInput>
+    export type UpdateThemeMutationError = ErrorType<void>
+
+    /**
+ * @summary Save the user's theme preference
+ */
+export const useUpdateTheme = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTheme>>, TError,{data: BodyType<UpdateThemeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTheme>>,
+        TError,
+        {data: BodyType<UpdateThemeInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateThemeMutationOptions(options));
+    }
 
 export const getCreatePartnerUrl = () => {
 

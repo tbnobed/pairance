@@ -5,6 +5,7 @@
  * CouplesBudget API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UserTheme } from './userTheme';
 
 export interface User {
   id: number;
@@ -14,5 +15,6 @@ export interface User {
   householdId: number | null;
   /** @nullable */
   spouseName?: string | null;
+  theme?: UserTheme;
   createdAt: string;
 }

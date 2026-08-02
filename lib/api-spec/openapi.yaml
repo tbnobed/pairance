@@ -104,6 +104,27 @@ paths:
         "401":
           description: Unauthorized
 
+  /auth/theme:
+    put:
+      operationId: updateTheme
+      tags: [auth]
+      summary: Save the user's theme preference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateThemeInput"
+      responses:
+        "200":
+          description: Theme saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request
+
   /auth/create-partner:
     post:
       operationId: createPartner
@@ -556,6 +577,9 @@ components:
           type: ["number", "null"]
         spouseName:
           type: ["string", "null"]
+        theme:
+          type: string
+          enum: [light, dark]
         createdAt:
           type: string
 
@@ -565,6 +589,14 @@ components:
       properties:
         user:
           $ref: "#/components/schemas/User"
+
+    UpdateThemeInput:
+      type: object
+      required: [theme]
+      properties:
+        theme:
+          type: string
+          enum: [light, dark]
 
     RegisterInput:
       type: object

@@ -19,6 +19,7 @@ function serializeUser(user: typeof usersTable.$inferSelect, spouseName?: string
     email: user.email,
     householdId: user.householdId,
     spouseName: spouseName ?? null,
+    theme: (user as any).theme ?? "light",
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -120,6 +121,22 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
+  const spouseName = await getSpouseName(user);
+  res.json(serializeUser(user, spouseName));
+});
+
+router.put("/auth/theme", requireAuth, async (req, res): Promise<void> => {
+  const theme = req.body?.theme;
+  if (theme !== "light" && theme !== "dark") {
+    res.status(400).json({ error: "theme must be 'light' or 'dark'" });
+    return;
+  }
+  const userId = (req as any).userId;
+  const [user] = await db
+    .update(usersTable)
+    .set({ theme })
+    .where(eq(usersTable.id, userId))
+    .returning();
   const spouseName = await getSpouseName(user);
   res.json(serializeUser(user, spouseName));
 });

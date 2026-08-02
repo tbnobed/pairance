@@ -301,6 +301,7 @@ CREATE TABLE public.users (
     email text NOT NULL,
     password_hash text NOT NULL,
     household_id integer,
+    theme text DEFAULT 'light'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 

@@ -9,6 +9,14 @@ export interface HealthStatus {
   status: string;
 }
 
+export type UserTheme = typeof UserTheme[keyof typeof UserTheme];
+
+
+export const UserTheme = {
+  light: 'light',
+  dark: 'dark',
+} as const;
+
 export interface User {
   id: number;
   name: string;
@@ -17,11 +25,24 @@ export interface User {
   householdId: number | null;
   /** @nullable */
   spouseName?: string | null;
+  theme?: UserTheme;
   createdAt: string;
 }
 
 export interface AuthResponse {
   user: User;
+}
+
+export type UpdateThemeInputTheme = typeof UpdateThemeInputTheme[keyof typeof UpdateThemeInputTheme];
+
+
+export const UpdateThemeInputTheme = {
+  light: 'light',
+  dark: 'dark',
+} as const;
+
+export interface UpdateThemeInput {
+  theme: UpdateThemeInputTheme;
 }
 
 export interface RegisterInput {
