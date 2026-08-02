@@ -17,7 +17,9 @@ import {
   Trash2, 
   Edit3, 
   Search,
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,19 +29,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionModal } from "@/components/transaction-modal";
 import { toast } from "sonner";
 
+const PAGE_SIZE = 25;
+
 export function Transactions() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [page, setPage] = useState(0);
 
   const queryClient = useQueryClient();
   const { data: categories } = useListCategories();
   
   const categoryIdFilter = selectedCategory === "all" ? null : parseInt(selectedCategory, 10);
-  const { data: transactions, isLoading } = useListTransactions(
-    categoryIdFilter ? { categoryId: categoryIdFilter } : {}
-  );
+  // Fetch one extra row to know whether a next page exists
+  const { data: pageRows, isLoading } = useListTransactions({
+    ...(categoryIdFilter ? { categoryId: categoryIdFilter } : {}),
+    limit: PAGE_SIZE + 1,
+    offset: page * PAGE_SIZE,
+  }, { query: { placeholderData: (prev: Transaction[] | undefined) => prev } as never });
+  const hasNextPage = (pageRows?.length ?? 0) > PAGE_SIZE;
+  const transactions = pageRows?.slice(0, PAGE_SIZE);
   const deleteTx = useDeleteTransaction();
+
+  const handleCategoryChange = (val: string) => {
+    setSelectedCategory(val);
+    setPage(0);
+  };
 
   const handleDelete = (id: number) => {
     if (confirm("Are you sure you want to delete this transaction?")) {
@@ -85,7 +100,7 @@ export function Transactions() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Select value={selectedCategory} onValueChange={handleCategoryChange}>
             <SelectTrigger className="w-[160px] bg-card border-none shadow-sm">
               <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Category" />
@@ -176,13 +191,37 @@ export function Transactions() {
                     <Search className="w-8 h-8 opacity-50" />
                   </div>
                   <h3 className="text-lg font-medium text-foreground mb-1">No transactions found</h3>
-                  <p>Try adjusting your search or filter criteria.</p>
+                  <p>{page > 0 ? "This page is empty." : "Try adjusting your search or filter criteria."}</p>
                 </div>
               )}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {(page > 0 || hasNextPage) && (
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">Page {page + 1}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={!hasNextPage}
+          >
+            Next
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      )}
 
       {editingTx && (
         <TransactionModal 
