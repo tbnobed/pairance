@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { useGetMe, useLogout, useLocationCheckIn } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -23,6 +24,7 @@ export function Layout({ children }: LayoutProps) {
   const [location, setLocation] = useLocation();
   const { data: user, isLoading, isError } = useGetMe();
   const logout = useLogout();
+  const queryClient = useQueryClient();
   const checkIn = useLocationCheckIn();
   const [isTransactionModalOpen, setIsTransactionModalOpen] = React.useState(false);
   const [txInitialData, setTxInitialData] = React.useState<any>(null);
@@ -40,6 +42,9 @@ export function Layout({ children }: LayoutProps) {
   const handleLogout = () => {
     logout.mutate(undefined, {
       onSuccess: () => {
+        // Clear all cached data (incl. the cached "logged-in user") so the
+        // login page doesn't see stale auth state and redirect-loop.
+        queryClient.clear();
         setLocation("/");
       }
     });
