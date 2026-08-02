@@ -14,6 +14,7 @@ router.post("/ai/suggest-budgets", requireAuth, async (req, res) => {
     carPayment,
     insurance,
     utilities,
+    tithes,
     savings,
   } = req.body as {
     monthlyIncome?: unknown;
@@ -22,6 +23,7 @@ router.post("/ai/suggest-budgets", requireAuth, async (req, res) => {
     carPayment?: unknown;
     insurance?: unknown;
     utilities?: unknown;
+    tithes?: unknown;
     savings?: unknown;
   };
 
@@ -39,6 +41,7 @@ router.post("/ai/suggest-budgets", requireAuth, async (req, res) => {
   if (typeof carPayment === "number" && carPayment > 0) fixedExpenses.push({ label: "Car Payment(s)", amount: carPayment });
   if (typeof insurance === "number" && insurance > 0) fixedExpenses.push({ label: "Insurance (health/auto/home)", amount: insurance });
   if (typeof utilities === "number" && utilities > 0) fixedExpenses.push({ label: "Utilities (electric/internet/phone)", amount: utilities });
+  if (typeof tithes === "number" && tithes > 0) fixedExpenses.push({ label: "Tithes (charitable giving, committed before spending)", amount: tithes });
   if (typeof savings === "number" && savings > 0) fixedExpenses.push({ label: "Desired Savings (set aside before spending)", amount: savings });
 
   const totalFixed = fixedExpenses.reduce((sum, e) => sum + e.amount, 0);

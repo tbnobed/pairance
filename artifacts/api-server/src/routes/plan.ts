@@ -24,7 +24,7 @@ router.put("/plan", requireAuth, async (req, res) => {
     return;
   }
   // Only accept known string fields
-  const allowed = ["income", "rent", "carPayment", "insurance", "utilities", "savings"];
+  const allowed = ["income", "rent", "carPayment", "insurance", "utilities", "tithes", "savings"];
   const clean: Record<string, string> = {};
   for (const key of allowed) {
     if (typeof plan[key] === "string") clean[key] = plan[key].slice(0, 20);

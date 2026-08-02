@@ -52,13 +52,14 @@ interface MonthlyPlan {
   carPayment: string;
   insurance: string;
   utilities: string;
+  tithes: string;
   savings: string;
 }
 
 const PLAN_KEY = "couples-budget-monthly-plan";
 
 const defaultPlan: MonthlyPlan = {
-  income: "", rent: "", carPayment: "", insurance: "", utilities: "", savings: "",
+  income: "", rent: "", carPayment: "", insurance: "", utilities: "", tithes: "", savings: "",
 };
 
 function usePlan() {
@@ -176,6 +177,7 @@ export function Budgets() {
   const [carPayment, setCarPayment] = useState("");
   const [insurance, setInsurance] = useState("");
   const [utilities, setUtilities] = useState("");
+  const [tithes, setTithes] = useState("");
   const [savings, setSavings] = useState("");
 
   // When AI dialog opens, pre-fill from saved plan
@@ -186,6 +188,7 @@ export function Budgets() {
       setCarPayment(plan.carPayment);
       setInsurance(plan.insurance);
       setUtilities(plan.utilities);
+      setTithes(plan.tithes);
       setSavings(plan.savings);
     }
   }, [aiOpen]);
@@ -206,8 +209,9 @@ export function Budgets() {
   const planCar      = p(plan.carPayment);
   const planIns      = p(plan.insurance);
   const planUtil     = p(plan.utilities);
+  const planTithes   = p(plan.tithes);
   const planSavings  = p(plan.savings);
-  const planFixed    = planRent + planCar + planIns + planUtil;
+  const planFixed    = planRent + planCar + planIns + planUtil + planTithes;
   const planReserved = planFixed + planSavings;
   const planForSpend = Math.max(0, planIncome - planReserved);
 
@@ -310,7 +314,7 @@ export function Budgets() {
     setAiLoading(true);
     setSuggestions(null);
     // Persist entered values back into the monthly plan
-    savePlan({ income, rent, carPayment, insurance, utilities, savings });
+    savePlan({ income, rent, carPayment, insurance, utilities, tithes, savings });
     try {
       const res = await fetch("/api/ai/suggest-budgets", {
         method: "POST",
@@ -323,6 +327,7 @@ export function Budgets() {
           ...(carPayment ? { carPayment: parseFloat(carPayment) } : {}),
           ...(insurance  ? { insurance:  parseFloat(insurance)  } : {}),
           ...(utilities  ? { utilities:  parseFloat(utilities)  } : {}),
+          ...(tithes     ? { tithes:     parseFloat(tithes)     } : {}),
           ...(savings    ? { savings:    parseFloat(savings)    } : {}),
         }),
       });
@@ -453,7 +458,7 @@ export function Budgets() {
               {[
                 { label: "Monthly Income", value: planIncome, sub: "take-home", color: "text-foreground" },
                 { label: "Fixed Expenses", value: planFixed,
-                  sub: [planRent && `Rent ${fmt(planRent)}`, planCar && `Car ${fmt(planCar)}`, planIns && `Ins ${fmt(planIns)}`, planUtil && `Utils ${fmt(planUtil)}`].filter(Boolean).join(" · ") || "none set",
+                  sub: [planRent && `Rent ${fmt(planRent)}`, planCar && `Car ${fmt(planCar)}`, planIns && `Ins ${fmt(planIns)}`, planUtil && `Utils ${fmt(planUtil)}`, planTithes && `Tithes ${fmt(planTithes)}`].filter(Boolean).join(" · ") || "none set",
                   color: "text-muted-foreground" },
                 { label: "Savings Goal", value: planSavings, sub: planSavings > 0 ? `${((planSavings / planIncome) * 100).toFixed(0)}% of income` : "not set", color: "text-emerald-600" },
                 { label: "For Spending", value: planForSpend, sub: "after fixed + savings", color: planForSpend < totalBudgeted ? "text-destructive" : "text-primary" },
@@ -732,7 +737,8 @@ export function Budgets() {
                   { key: "rent",       label: "Rent / Mortgage", placeholder: "e.g. 1800" },
                   { key: "carPayment", label: "Car Payment(s)",  placeholder: "e.g. 500"  },
                   { key: "insurance",  label: "Insurance",       placeholder: "e.g. 300"  },
-                  { key: "utilities",  label: "Tithes",          placeholder: "e.g. 200"  },
+                  { key: "utilities",  label: "Utilities",       placeholder: "e.g. 200"  },
+                  { key: "tithes",     label: "Tithes",          placeholder: "e.g. 500"  },
                 ] as { key: keyof MonthlyPlan; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
                   <div key={key}>
                     <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
@@ -761,7 +767,7 @@ export function Budgets() {
             {/* Live preview */}
             {p(draftPlan.income) > 0 && (() => {
               const inc  = p(draftPlan.income);
-              const fixed = p(draftPlan.rent) + p(draftPlan.carPayment) + p(draftPlan.insurance) + p(draftPlan.utilities);
+              const fixed = p(draftPlan.rent) + p(draftPlan.carPayment) + p(draftPlan.insurance) + p(draftPlan.utilities) + p(draftPlan.tithes);
               const sav  = p(draftPlan.savings);
               const left = Math.max(0, inc - fixed - sav);
               return (
@@ -867,7 +873,8 @@ export function Budgets() {
                   { label: "Rent / Mortgage",  value: rent,       setter: setRent,       placeholder: "e.g. 1800" },
                   { label: "Car Payment(s)",    value: carPayment, setter: setCarPayment, placeholder: "e.g. 500"  },
                   { label: "Insurance",         value: insurance,  setter: setInsurance,  placeholder: "e.g. 300"  },
-                  { label: "Tithes",            value: utilities,  setter: setUtilities,  placeholder: "e.g. 200"  },
+                  { label: "Utilities",         value: utilities,  setter: setUtilities,  placeholder: "e.g. 200"  },
+                  { label: "Tithes",            value: tithes,     setter: setTithes,     placeholder: "e.g. 500"  },
                   { label: "Desired Savings",   value: savings,    setter: setSavings,    placeholder: "e.g. 1000" },
                 ] as { label: string; value: string; setter: (v: string) => void; placeholder: string }[]).map(({ label, value, setter, placeholder }) => (
                   <div key={label}>
@@ -880,8 +887,8 @@ export function Budgets() {
                   </div>
                 ))}
               </div>
-              {income && (rent || carPayment || insurance || utilities || savings) && (() => {
-                const fixed = [rent, carPayment, insurance, utilities, savings].reduce((s, v) => s + (parseFloat(v) || 0), 0);
+              {income && (rent || carPayment || insurance || utilities || tithes || savings) && (() => {
+                const fixed = [rent, carPayment, insurance, utilities, tithes, savings].reduce((s, v) => s + (parseFloat(v) || 0), 0);
                 const left = parseFloat(income) - fixed;
                 return (
                   <div className="flex justify-between text-xs pt-1 border-t border-border">
