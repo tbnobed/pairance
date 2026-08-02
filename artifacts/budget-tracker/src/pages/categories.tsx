@@ -20,6 +20,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 
+const CATEGORY_EMOJIS = [
+  "🛒", "🍽️", "🏠", "🚗", "⛽", "💡", "📱", "🎬",
+  "🎮", "👕", "💊", "🏥", "✈️", "🏖️", "🎁", "☕",
+  "🍺", "🐾", "💇", "🏋️", "📚", "🎓", "👶", "💰",
+] as const;
+
 const categorySchema = z.object({
   name: z.string().min(1, "Name is required"),
   color: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Invalid hex color"),
@@ -187,9 +193,25 @@ export function Categories() {
                   name="icon"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Icon (Emoji or Symbol)</FormLabel>
+                      <FormLabel>Icon</FormLabel>
                       <FormControl>
-                        <Input placeholder="*" {...field} />
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-8 gap-1">
+                            {CATEGORY_EMOJIS.map((emoji) => (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => field.onChange(emoji)}
+                                className={`h-9 w-9 rounded-lg text-lg flex items-center justify-center transition-colors hover:bg-accent ${
+                                  field.value === emoji ? "bg-primary/15 ring-2 ring-primary" : "bg-muted/40"
+                                }`}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                          <Input placeholder="Or type any emoji…" {...field} />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
