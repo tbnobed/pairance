@@ -415,7 +415,7 @@ export function Budgets() {
           <h2 className="text-3xl font-serif text-foreground">Monthly Budgets</h2>
           <p className="text-muted-foreground mt-1">Plan your month, track every dollar.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={handleMonthlyReview} className="rounded-full gap-2">
             <Sparkles className="w-4 h-4 text-secondary" />
             Monthly Review
