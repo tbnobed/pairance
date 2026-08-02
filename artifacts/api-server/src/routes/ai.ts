@@ -6,7 +6,7 @@ import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
 
-router.post("/api/ai/suggest-budgets", requireAuth, async (req, res) => {
+router.post("/ai/suggest-budgets", requireAuth, async (req, res) => {
   const {
     monthlyIncome,
     zipCode,
