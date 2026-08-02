@@ -32,12 +32,12 @@ export function Settings() {
   const onSubmit = (values: z.infer<typeof inviteSchema>) => {
     inviteSpouse.mutate({ data: values }, {
       onSuccess: () => {
-        toast.success("Partner invited successfully!");
+        toast.success("Partner linked to your household!");
         form.reset();
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       },
       onError: (err) => {
-        toast.error("Failed to invite partner. They might already be registered.");
+        toast.error("No account found with that email. Ask your partner to sign up first, then try again.");
       }
     });
   };
@@ -116,7 +116,7 @@ export function Settings() {
                 <div className="pt-2">
                   <h4 className="font-medium mb-3 text-sm flex items-center gap-2">
                     <UserPlus className="w-4 h-4 text-primary" />
-                    Invite your partner
+                    Link your partner
                   </h4>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
@@ -133,12 +133,12 @@ export function Settings() {
                         )}
                       />
                       <Button type="submit" disabled={inviteSpouse.isPending} className="shadow-sm">
-                        {inviteSpouse.isPending ? "Sending..." : "Send Invite"}
+                        {inviteSpouse.isPending ? "Linking..." : "Link Partner"}
                       </Button>
                     </form>
                   </Form>
                   <p className="text-xs text-muted-foreground mt-3 leading-relaxed max-w-[400px]">
-                    If your partner already has an account with this email, they will be instantly linked to your household. Otherwise, they can sign up using this email.
+                    Your partner must create their own account first. Once they've signed up, enter their email here and they'll be linked to your household instantly. No email is sent — share the site link with them yourself.
                   </p>
                 </div>
               </div>
