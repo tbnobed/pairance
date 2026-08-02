@@ -29,13 +29,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TransactionModal } from "@/components/transaction-modal";
 import { toast } from "sonner";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 export function Transactions() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState<number>(() => {
+    const saved = parseInt(localStorage.getItem("txPageSize") || "", 10);
+    return PAGE_SIZE_OPTIONS.includes(saved) ? saved : 25;
+  });
+
+  const handlePageSizeChange = (val: string) => {
+    const size = parseInt(val, 10);
+    setPageSize(size);
+    setPage(0);
+    localStorage.setItem("txPageSize", val);
+  };
 
   const queryClient = useQueryClient();
   const { data: categories } = useListCategories();
@@ -44,11 +55,11 @@ export function Transactions() {
   // Fetch one extra row to know whether a next page exists
   const { data: pageRows, isLoading } = useListTransactions({
     ...(categoryIdFilter ? { categoryId: categoryIdFilter } : {}),
-    limit: PAGE_SIZE + 1,
-    offset: page * PAGE_SIZE,
+    limit: pageSize + 1,
+    offset: page * pageSize,
   }, { query: { placeholderData: (prev: Transaction[] | undefined) => prev } as never });
-  const hasNextPage = (pageRows?.length ?? 0) > PAGE_SIZE;
-  const transactions = pageRows?.slice(0, PAGE_SIZE);
+  const hasNextPage = (pageRows?.length ?? 0) > pageSize;
+  const transactions = pageRows?.slice(0, pageSize);
   const deleteTx = useDeleteTransaction();
 
   const handleCategoryChange = (val: string) => {
@@ -199,29 +210,44 @@ export function Transactions() {
         </CardContent>
       </Card>
 
-      {(page > 0 || hasNextPage) && (
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous
-          </Button>
-          <span className="text-sm text-muted-foreground">Page {page + 1}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => p + 1)}
-            disabled={!hasNextPage}
-          >
-            Next
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Per page:</span>
+          <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+            <SelectTrigger className="w-[80px] h-8 bg-card border-none shadow-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <SelectItem key={n} value={n.toString()}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      )}
+        {(page > 0 || hasNextPage) && (
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">Page {page + 1}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!hasNextPage}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
+      </div>
 
       {editingTx && (
         <TransactionModal 
