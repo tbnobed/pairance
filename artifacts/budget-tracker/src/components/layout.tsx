@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TransactionModal } from "@/components/transaction-modal";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -58,6 +60,40 @@ export function Layout({ children }: LayoutProps) {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = React.useState(false);
   const [txInitialData, setTxInitialData] = React.useState<any>(null);
   const [scanning, setScanning] = React.useState(false);
+  type ScannedTx = { description: string; amount: number; date: string | null; categoryId: number; categoryName: string | null };
+  const [scannedTxs, setScannedTxs] = React.useState<(ScannedTx & { checked: boolean })[] | null>(null);
+  const [importing, setImporting] = React.useState(false);
+
+  const handleImportScanned = async () => {
+    if (!scannedTxs) return;
+    const selected = scannedTxs.filter((t) => t.checked);
+    if (selected.length === 0) { setScannedTxs(null); return; }
+    setImporting(true);
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    let added = 0;
+    for (const t of selected) {
+      try {
+        const res = await fetch("/api/transactions", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: t.description,
+            amount: t.amount,
+            categoryId: t.categoryId,
+            date: t.date ?? todayStr,
+          }),
+        });
+        if (res.ok) added++;
+      } catch { /* continue with the rest */ }
+    }
+    setImporting(false);
+    setScannedTxs(null);
+    queryClient.invalidateQueries();
+    if (added === selected.length) toast.success(`Added ${added} transactions`);
+    else toast.error(`Added ${added} of ${selected.length} transactions — some failed`);
+  };
   const receiptInputRef = React.useRef<HTMLInputElement>(null);
 
   // Downscale the photo client-side so uploads stay small and fast.
@@ -93,14 +129,22 @@ export function Layout({ children }: LayoutProps) {
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? "Scan failed");
-      setTxInitialData({
-        amount: body.amount,
-        description: body.description,
-        categoryId: body.categoryId,
-        ...(body.date ? { date: body.date } : {}),
-      });
-      setIsTransactionModalOpen(true);
-      toast.success(`Read receipt: ${body.description} — filed under ${body.categoryName ?? "a category"}. Review and save.`);
+      const txs = body.transactions as ScannedTx[];
+      if (txs.length === 1) {
+        // Single receipt — prefill the normal form for review.
+        const t = txs[0];
+        setTxInitialData({
+          amount: t.amount,
+          description: t.description,
+          categoryId: t.categoryId,
+          ...(t.date ? { date: t.date } : {}),
+        });
+        setIsTransactionModalOpen(true);
+        toast.success(`Read receipt: ${t.description} — filed under ${t.categoryName ?? "a category"}. Review and save.`);
+      } else {
+        // Bank screenshot with multiple transactions — review list.
+        setScannedTxs(txs.map((t) => ({ ...t, checked: true })));
+      }
     } catch (err: any) {
       toast.error(err?.message ?? "Couldn't scan the receipt. Try a clearer photo.");
     } finally {
@@ -315,6 +359,42 @@ export function Layout({ children }: LayoutProps) {
         className="hidden"
         onChange={handleReceiptFile}
       />
+
+      {/* Multi-transaction import review (bank screenshot scan) */}
+      <Dialog open={scannedTxs !== null} onOpenChange={(o) => { if (!o) setScannedTxs(null); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Found {scannedTxs?.length ?? 0} transactions</DialogTitle>
+            <DialogDescription>Uncheck any you don't want, then add them all at once. Payments and credits were skipped automatically.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            {scannedTxs?.map((t, i) => (
+              <label key={i} className="flex items-center gap-3 rounded-lg border border-border p-3 cursor-pointer">
+                <Checkbox
+                  checked={t.checked}
+                  onCheckedChange={(c) =>
+                    setScannedTxs((prev) => prev?.map((p, j) => (j === i ? { ...p, checked: c === true } : p)) ?? null)
+                  }
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium truncate">{t.description}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {t.categoryName ?? "Uncategorized"}{t.date ? ` · ${t.date}` : " · today"}
+                  </div>
+                </div>
+                <div className="text-sm font-semibold shrink-0">${t.amount.toFixed(2)}</div>
+              </label>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScannedTxs(null)} disabled={importing}>Cancel</Button>
+            <Button onClick={handleImportScanned} disabled={importing || !scannedTxs?.some((t) => t.checked)}>
+              {importing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Add {scannedTxs?.filter((t) => t.checked).length ?? 0} transactions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {isTransactionModalOpen && (
         <TransactionModal 

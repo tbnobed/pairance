@@ -261,17 +261,21 @@ router.post("/ai/scan-receipt", json({ limit: "10mb" }), requireAuth, async (req
         {
           role: "system",
           content:
-            "You read receipt photos and extract transaction data. " +
+            "You read photos of receipts OR screenshots of banking-app transaction lists, and extract expense transactions. " +
             "Respond ONLY with valid JSON, no markdown: " +
-            '{"description": "merchant name", "amount": 12.34, "date": "YYYY-MM-DD", "categoryId": 1}. ' +
-            "amount is the receipt total. If the date is unreadable, use null. " +
-            "Pick the categoryId that best fits the merchant/items from the provided list. " +
-            'If the image is not a receipt, respond {"error": "not a receipt"}.',
+            '{"transactions": [{"description": "merchant name", "amount": 12.34, "date": "YYYY-MM-DD", "categoryId": 1}]}. ' +
+            "For a single receipt, return one transaction whose amount is the receipt TOTAL. " +
+            "For a transaction-list screenshot, return one entry per expense. " +
+            "SKIP payments, credits, refunds, and deposits (amounts shown as positive/incoming like '+$200.00' or labeled Payment). " +
+            "Amounts must be positive numbers (the spend amount). " +
+            "If a date is unreadable or relative (like '4 hours ago'), use null. " +
+            "Pick each categoryId that best fits the merchant from the provided list. " +
+            'If the image contains no transactions, respond {"error": "no transactions found"}.',
         },
         {
           role: "user",
           content: [
-            { type: "text", text: `Our spending categories:\n${categoryList}\n\nExtract this receipt:` },
+            { type: "text", text: `Our spending categories:\n${categoryList}\n\nExtract the transaction(s) from this image:` },
             { type: "image_url", image_url: { url: dataUrl } },
           ],
         },
@@ -285,28 +289,30 @@ router.post("/ai/scan-receipt", json({ limit: "10mb" }), requireAuth, async (req
   const raw = completion.choices[0]?.message?.content?.trim() ?? "";
   try {
     const parsed = JSON.parse(raw.replace(/^```json?\s*|\s*```$/g, ""));
-    if (parsed.error) {
-      res.status(422).json({ error: "That doesn't look like a receipt." });
+    if (parsed.error || !Array.isArray(parsed.transactions)) {
+      res.status(422).json({ error: "Couldn't find any transactions in that image." });
       return;
     }
-    const amount = Number(parsed.amount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      res.status(422).json({ error: "Couldn't read the total on the receipt." });
+    const catNames = new Map(categories.map((c) => [c.id, c.name]));
+    const transactions = parsed.transactions
+      .map((t: any) => {
+        const amount = Number(t.amount);
+        if (!Number.isFinite(amount) || amount <= 0) return null;
+        const categoryId = catNames.has(Number(t.categoryId)) ? Number(t.categoryId) : categories[0].id;
+        return {
+          description: String(t.description ?? "Transaction").slice(0, 200),
+          amount: Math.round(amount * 100) / 100,
+          date: typeof t.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(t.date) ? t.date : null,
+          categoryId,
+          categoryName: catNames.get(categoryId) ?? null,
+        };
+      })
+      .filter(Boolean);
+    if (transactions.length === 0) {
+      res.status(422).json({ error: "Couldn't read any amounts from that image." });
       return;
     }
-    const categoryId = categories.some((c) => c.id === Number(parsed.categoryId))
-      ? Number(parsed.categoryId)
-      : categories[0].id;
-    const date = typeof parsed.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date)
-      ? parsed.date
-      : null;
-    res.json({
-      description: String(parsed.description ?? "Receipt"),
-      amount,
-      date,
-      categoryId,
-      categoryName: categories.find((c) => c.id === categoryId)?.name ?? null,
-    });
+    res.json({ transactions });
   } catch {
     res.status(500).json({ error: "AI returned an unparseable response" });
   }
