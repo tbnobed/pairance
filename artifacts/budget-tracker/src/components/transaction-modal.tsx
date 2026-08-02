@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -45,6 +45,11 @@ export function TransactionModal({ isOpen, onClose, transaction, initialData }: 
   const createTx = useCreateTransaction();
   const updateTx = useUpdateTransaction();
 
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitCategoryId, setSplitCategoryId] = useState<number>(0);
+  const [splitAmount, setSplitAmount] = useState<string>("");
+  const [splitSaving, setSplitSaving] = useState(false);
+
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -70,10 +75,43 @@ export function TransactionModal({ isOpen, onClose, transaction, initialData }: 
         locationLat: transaction?.locationLat ?? initialData?.locationLat ?? null,
         locationLng: transaction?.locationLng ?? initialData?.locationLng ?? null,
       });
+      setSplitMode(false);
+      setSplitCategoryId(0);
+      setSplitAmount("");
     }
   }, [isOpen, transaction, initialData, form]);
 
-  const onSubmit = (values: z.infer<typeof transactionSchema>) => {
+  const onSubmit = async (values: z.infer<typeof transactionSchema>) => {
+    if (!transaction && splitMode) {
+      const second = Math.round(parseFloat(splitAmount || "0") * 100) / 100;
+      const first = Math.round((values.amount - second) * 100) / 100;
+      if (!splitCategoryId) {
+        toast.error("Pick a category for the split");
+        return;
+      }
+      if (splitCategoryId === values.categoryId) {
+        toast.error("Split categories must be different");
+        return;
+      }
+      if (!(second > 0) || !(first > 0)) {
+        toast.error("Split amount must be more than $0 and less than the total");
+        return;
+      }
+      setSplitSaving(true);
+      try {
+        await createTx.mutateAsync({ data: { ...values, amount: first } });
+        await createTx.mutateAsync({ data: { ...values, amount: second, categoryId: splitCategoryId } });
+        toast.success("Transaction split into 2 categories");
+        invalidateQueries();
+        onClose();
+      } catch {
+        toast.error("Failed to save split transaction — check your transactions list");
+        invalidateQueries();
+      } finally {
+        setSplitSaving(false);
+      }
+      return;
+    }
     if (transaction) {
       updateTx.mutate({ id: transaction.id, data: values }, {
         onSuccess: () => {
@@ -176,6 +214,70 @@ export function TransactionModal({ isOpen, onClose, transaction, initialData }: 
               )}
             />
 
+            {!transaction && !splitMode && (
+              <button
+                type="button"
+                onClick={() => setSplitMode(true)}
+                className="text-sm text-primary underline-offset-4 hover:underline"
+              >
+                Split between two categories
+              </button>
+            )}
+
+            {!transaction && splitMode && (
+              <div className="rounded-lg border border-border p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Split part</span>
+                  <button
+                    type="button"
+                    onClick={() => { setSplitMode(false); setSplitCategoryId(0); setSplitAmount(""); }}
+                    className="text-xs text-muted-foreground hover:underline"
+                  >
+                    Remove split
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Select
+                    onValueChange={(val) => setSplitCategoryId(parseInt(val, 10))}
+                    value={splitCategoryId ? splitCategoryId.toString() : ""}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="2nd category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories?.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <span>{cat.icon}</span>
+                            <span>{cat.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      className="pl-7"
+                      placeholder="0.00"
+                      value={splitAmount}
+                      onChange={(e) => setSplitAmount(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {(() => {
+                    const total = parseFloat(String(form.watch("amount"))) || 0;
+                    const second = parseFloat(splitAmount) || 0;
+                    const first = Math.round((total - second) * 100) / 100;
+                    return `First category gets $${first.toFixed(2)}, second gets $${second.toFixed(2)}.`;
+                  })()}
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -201,8 +303,8 @@ export function TransactionModal({ isOpen, onClose, transaction, initialData }: 
 
             <div className="pt-4 flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button type="submit" disabled={createTx.isPending || updateTx.isPending}>
-                {transaction ? "Save Changes" : "Save Transaction"}
+              <Button type="submit" disabled={createTx.isPending || updateTx.isPending || splitSaving}>
+                {transaction ? "Save Changes" : splitMode ? "Save 2 Transactions" : "Save Transaction"}
               </Button>
             </div>
           </form>
