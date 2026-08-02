@@ -732,7 +732,7 @@ export function Budgets() {
                   { key: "rent",       label: "Rent / Mortgage", placeholder: "e.g. 1800" },
                   { key: "carPayment", label: "Car Payment(s)",  placeholder: "e.g. 500"  },
                   { key: "insurance",  label: "Insurance",       placeholder: "e.g. 300"  },
-                  { key: "utilities",  label: "Utilities",       placeholder: "e.g. 200"  },
+                  { key: "utilities",  label: "Tithes",          placeholder: "e.g. 200"  },
                 ] as { key: keyof MonthlyPlan; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
                   <div key={key}>
                     <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
@@ -867,7 +867,7 @@ export function Budgets() {
                   { label: "Rent / Mortgage",  value: rent,       setter: setRent,       placeholder: "e.g. 1800" },
                   { label: "Car Payment(s)",    value: carPayment, setter: setCarPayment, placeholder: "e.g. 500"  },
                   { label: "Insurance",         value: insurance,  setter: setInsurance,  placeholder: "e.g. 300"  },
-                  { label: "Utilities",         value: utilities,  setter: setUtilities,  placeholder: "e.g. 200"  },
+                  { label: "Tithes",            value: utilities,  setter: setUtilities,  placeholder: "e.g. 200"  },
                   { label: "Desired Savings",   value: savings,    setter: setSavings,    placeholder: "e.g. 1000" },
                 ] as { label: string; value: string; setter: (v: string) => void; placeholder: string }[]).map(({ label, value, setter, placeholder }) => (
                   <div key={label}>
