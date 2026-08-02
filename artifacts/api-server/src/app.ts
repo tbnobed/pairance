@@ -57,10 +57,15 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      // The web app and API are same-origin everywhere (Vite proxy in dev,
+      // nginx proxy in Docker), so "lax" always works. Secure cookies are
+      // opt-in via COOKIE_SECURE=true — required only when serving over
+      // HTTPS; over plain HTTP the browser would reject them and login
+      // would silently fail.
+      secure: process.env.COOKIE_SECURE === "true",
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: "lax",
     },
   }),
 );
